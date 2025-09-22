@@ -1,16 +1,21 @@
-import React, { useState } from "react";
+
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  Modal,
   Animated,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Emergency() {
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
   const [emergencyContacts, setEmergencyContacts] = useState([
     { id: "1", name: "Police", phone: "100", address: "Local Police Station" },
     { id: "2", name: "Ambulance", phone: "102", address: "City Hospital" },
@@ -56,27 +61,28 @@ export default function Emergency() {
   };
 
   const renderItem = ({ item }) => (
-    <Animated.View style={styles.contactCard}>
+    <Animated.View style={[styles.contactCard, { backgroundColor: theme.card, shadowColor: theme.danger, borderColor: theme.border }]}> 
       {deleteMode && (
         <TouchableOpacity
           style={[
             styles.checkbox,
-            selectedContacts.includes(item.id) && styles.checkedBox,
+            { borderColor: theme.primary },
+            selectedContacts.includes(item.id) && { backgroundColor: theme.primary },
           ]}
           onPress={() => toggleSelectContact(item.id)}
         />
       )}
       <View style={{ marginLeft: deleteMode ? 15 : 0 }}>
-        <Text style={styles.contactName}>{item.name}</Text>
-        <Text style={styles.contactPhone}>📞 {item.phone}</Text>
-        <Text style={styles.contactAddress}>📍 {item.address}</Text>
+        <Text style={[styles.contactName, { color: theme.text }]}>{item.name}</Text>
+        <Text style={[styles.contactPhone, { color: theme.secondary }]}>📞 {item.phone}</Text>
+        <Text style={[styles.contactAddress, { color: theme.icon }]}>📍 {item.address}</Text>
       </View>
     </Animated.View>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Emergency Contacts</Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}> 
+      <Text style={[styles.title, { color: theme.primary }]}>Emergency Contacts</Text>
 
       <FlatList
         data={emergencyContacts}
@@ -87,61 +93,64 @@ export default function Emergency() {
 
     {/* Floating Buttons */}
     {!deleteMode && (
-    <View style={styles.floatingButtons}>
-        <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: "#1e90ff" }]}
-        onPress={() => setModalVisible(true)}
-        >
-        <Text style={styles.floatingButtonText}>Add</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: "#ff4757" }]}
-        onPress={() => setDeleteMode(true)}
-        >
-        <Text style={styles.floatingButtonText}>Delete</Text>
-        </TouchableOpacity>
-    </View>
+  <View style={styles.floatingButtons}>
+    <TouchableOpacity
+    style={[styles.floatingButton, { backgroundColor: theme.secondary }]}
+    onPress={() => setModalVisible(true)}
+    >
+    <Text style={styles.floatingButtonText}>Add</Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+    style={[styles.floatingButton, { backgroundColor: theme.danger }]}
+    onPress={() => setDeleteMode(true)}
+    >
+    <Text style={styles.floatingButtonText}>Delete</Text>
+    </TouchableOpacity>
+  </View>
     )}
 
     {deleteMode && (
-    <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: "#ff6b81", bottom: 30 }]}
-        onPress={deleteSelectedContacts}
-    >
-        <Text style={styles.floatingButtonText}>Delete Selected</Text>
-    </TouchableOpacity>
+  <TouchableOpacity
+    style={[styles.floatingButton, { backgroundColor: theme.warning, bottom: 30 }]}
+    onPress={deleteSelectedContacts}
+  >
+    <Text style={styles.floatingButtonText}>Delete Selected</Text>
+  </TouchableOpacity>
     )}
 
 
       {/* Modal Form */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Add New Emergency Contact</Text>
+          <View style={[styles.modalContainer, { backgroundColor: theme.card }]}> 
+            <Text style={[styles.modalTitle, { color: theme.primary }]}>Add New Emergency Contact</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text, borderColor: theme.border }]}
               placeholder="Name"
+              placeholderTextColor={theme.icon}
               value={newName}
               onChangeText={setNewName}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text, borderColor: theme.border }]}
               placeholder="Phone Number"
+              placeholderTextColor={theme.icon}
               keyboardType="phone-pad"
               value={newPhone}
               onChangeText={setNewPhone}
             />
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: theme.text, borderColor: theme.border }]}
               placeholder="Address"
+              placeholderTextColor={theme.icon}
               value={newAddress}
               onChangeText={setNewAddress}
             />
-            <TouchableOpacity style={styles.modalAddButton} onPress={addContact}>
+            <TouchableOpacity style={[styles.modalAddButton, { backgroundColor: theme.secondary }]} onPress={addContact}>
               <Text style={styles.modalAddButtonText}>Add Contact</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={[styles.closeButton, { backgroundColor: theme.danger }]}
               onPress={() => setModalVisible(false)}
             >
               <Text style={styles.closeText}>Close</Text>
@@ -154,31 +163,29 @@ export default function Emergency() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#eef2f5" },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center", color: "#333" },
+  container: { flex: 1, padding: 20 },
+  title: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   contactCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     padding: 20,
     borderRadius: 20,
     marginBottom: 15,
-    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 5,
+    borderWidth: 1,
   },
-  contactName: { fontSize: 20, fontWeight: "bold", color: "#111" },
-  contactPhone: { fontSize: 16, color: "#555", marginTop: 5 },
-  contactAddress: { fontSize: 16, color: "#555", marginTop: 3 },
+  contactName: { fontSize: 20, fontWeight: "bold" },
+  contactPhone: { fontSize: 16, marginTop: 5 },
+  contactAddress: { fontSize: 16, marginTop: 3 },
   checkbox: {
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: "#1e90ff",
     borderRadius: 12,
   },
-  checkedBox: { backgroundColor: "#1e90ff" },
+  checkedBox: {},
   floatingButtons: {
     position: "absolute",
     right: 20,
@@ -203,7 +210,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 20,
     elevation: 10,
@@ -211,20 +217,18 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
     borderRadius: 15,
     padding: 15,
     fontSize: 16,
     marginBottom: 15,
   },
   modalAddButton: {
-    backgroundColor: "#1e90ff",
     padding: 15,
     borderRadius: 15,
     alignItems: "center",
     marginBottom: 10,
   },
   modalAddButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  closeButton: { padding: 15, backgroundColor: "#ff4757", alignItems: "center", borderRadius: 15 },
+  closeButton: { padding: 15, alignItems: "center", borderRadius: 15 },
   closeText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });

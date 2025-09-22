@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function Registration() {
   const [regId, setRegId] = useState("");
@@ -32,7 +32,7 @@ export default function Registration() {
             }
             const location = await Location.getCurrentPositionAsync({});
             console.log("User location:", location.coords);
-            router.replace("/dashboard");
+            router.replace("/(tabs)/dashboard");
           },
         },
       ],
