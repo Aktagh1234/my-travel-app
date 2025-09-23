@@ -5,25 +5,47 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+
+// New color scheme
+const PRIMARY = '#4F46E5'; // Indigo / Deep Blue
+const SECONDARY = '#10B981'; // Emerald Green
+const ACCENT_WARNING = '#F59E0B'; // Amber/Orange
+const ACCENT_DANGER = '#EF4444'; // Red
+const BACKGROUND = '#F9FAFB'; // Neutral Light Gray
+const CARD = '#fff'; // White
+const tintColorLight = PRIMARY;
+const tintColorDark = PRIMARY;
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#1E293B', // Slate-800 for strong contrast
+    background: BACKGROUND,
+    card: CARD,
+    tint: PRIMARY,
+    icon: PRIMARY,
+    tabIconDefault: '#A1A1AA', // Neutral gray
+    tabIconSelected: PRIMARY,
+    primary: PRIMARY,
+    secondary: SECONDARY,
+    warning: ACCENT_WARNING,
+    danger: ACCENT_DANGER,
+    success: SECONDARY,
+    border: '#E5E7EB', // Light border
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#F3F4F6', // Light text
+    background: '#18181B', // Very dark gray
+    card: '#23232B', // Slightly lighter for cards
+    tint: PRIMARY,
+    icon: PRIMARY,
+    tabIconDefault: '#52525B',
+    tabIconSelected: PRIMARY,
+    primary: PRIMARY,
+    secondary: SECONDARY,
+    warning: ACCENT_WARNING,
+    danger: ACCENT_DANGER,
+    success: SECONDARY,
+    border: '#27272A',
   },
 };
 

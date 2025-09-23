@@ -1,5 +1,6 @@
-import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 
 export default function TabsLayout() {
   return (
@@ -13,6 +14,11 @@ export default function TabsLayout() {
           height: 70,
           paddingBottom: 10,
           paddingTop: 10,
+          borderTopWidth: 0,
+          // Elevation/shadow so bar sits above system nav
+          ...(Platform.OS === 'android'
+            ? { elevation: 12 }
+            : { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: -2 } }),
         },
       }}
     >
@@ -27,11 +33,11 @@ export default function TabsLayout() {
       />
 
       <Tabs.Screen
-        name="explore"
+        name="alerts"
         options={{
-          title: "Explore",
+          title: "Alerts",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass-outline" size={size} color={color} />
+            <Ionicons name="alert-circle-outline" size={size} color={color} />
           ),
         }}
       />
