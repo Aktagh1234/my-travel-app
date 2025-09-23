@@ -3,21 +3,26 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+
 export default function Registration() {
   const [regId, setRegId] = useState("");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [idDoc, setIdDoc] = useState("");
   const router = useRouter();
 
   const handleVerify = () => {
-    const isValid = true;
-
-    if (!isValid) {
-      Alert.alert("Verification Failed", "Invalid Registration ID.");
+    // Simple validation
+    if (!regId || !name || !phone || !email || !idDoc) {
+      Alert.alert("Missing Fields", "Please fill in all fields.");
       return;
     }
 
+    // You can add more robust validation here
     Alert.alert(
       "Tourist Verified",
-      `Your ID (${regId || "N/A"}) is valid.`,
+      `Registration Complete!\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nID: ${idDoc}\nReg ID: ${regId}`,
       [
         {
           text: "OK",
@@ -49,6 +54,37 @@ export default function Registration() {
         <Text style={styles.title}>Register Your ID</Text>
         <Text style={styles.subtitle}>Enter the registration ID given at the tourist spot.</Text>
 
+
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          placeholderTextColor="#aaa"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone Number"
+          placeholderTextColor="#aaa"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email Address"
+          placeholderTextColor="#aaa"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Aadhar Card / Passport Number"
+          placeholderTextColor="#aaa"
+          value={idDoc}
+          onChangeText={setIdDoc}
+        />
         <TextInput
           style={styles.input}
           placeholder="Registration ID"
