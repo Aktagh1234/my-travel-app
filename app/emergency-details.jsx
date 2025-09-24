@@ -1,5 +1,5 @@
-
 import { Colors } from "@/constants/theme";
+
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useState } from "react";
 import {
@@ -15,7 +15,18 @@ import {
 
 export default function Emergency() {
   const colorScheme = useColorScheme() ?? 'light';
-  const theme = Colors[colorScheme];
+  const theme = {
+    ...Colors[colorScheme],
+    background: "#fff",
+    card: "#ffffffff",
+    primary: "#000000ff",
+    secondary: "#00bcd4",
+    danger: "#f44336",
+    warning: "#c80000ff",
+    border: "#000000ff",
+    text: "#222",
+    icon: "#000000ff",
+  };
   const [emergencyContacts, setEmergencyContacts] = useState([
     { id: "1", name: "Police", phone: "100", address: "Local Police Station" },
     { id: "2", name: "Ambulance", phone: "102", address: "City Hospital" },
