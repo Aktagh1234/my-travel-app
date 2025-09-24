@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ImageBackground } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ImageBackground, Image } from "react-native";
 import { useRouter } from "expo-router";
 
 export default function Home() {
@@ -12,6 +12,11 @@ export default function Home() {
       blurRadius={2}
     >
       <View style={styles.overlay}>
+        <Image
+          source={require("../assets/images/logo.jpg")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.title}>Welcome to Tourist Safety App</Text>
         <Text style={styles.subtitle}>
           Your safety companion during your travels.
@@ -40,6 +45,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  logo: {
+    width: 220,
+    height: 70,
+    marginBottom: 30,
   },
   title: {
     fontSize: 32,
