@@ -9,18 +9,22 @@ export default function History() {
   const [showAllMap, setShowAllMap] = useState(false);
 
   useEffect(() => {
-    const data = [];
-    const now = new Date();
-    for (let i = 0; i < 10; i++) {
-      const timestamp = new Date(now.getTime() - i * 15 * 60 * 1000);
-      data.push({
-        id: i.toString(),
-        latitude: 28.59 + Math.random() * 0.01,
-        longitude: 77.02 + Math.random() * 0.01,
-        timestamp: timestamp.toLocaleString(),
-      });
-    }
-    setLocationHistory(data);
+    (async () => {
+      try {
+        const raw = await import('@react-native-async-storage/async-storage');
+        const AsyncStorage = raw.default || raw;
+        const data = await AsyncStorage.getItem('locationHistory');
+        if (data) {
+          // Add id field for FlatList
+          const arr = JSON.parse(data).map((item, idx) => ({ ...item, id: idx.toString() }));
+          setLocationHistory(arr);
+        } else {
+          setLocationHistory([]);
+        }
+      } catch {
+        setLocationHistory([]);
+      }
+    })();
   }, []);
 
   const renderItem = ({ item }) => (

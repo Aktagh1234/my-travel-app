@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Switch, Modal, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { FlatList, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Static data for demo
 const PLACES = [
