@@ -8,13 +8,17 @@ export default function History() {
   const [showAllMap, setShowAllMap] = useState(false);
 
   useEffect(() => {
-    const data = [];
-    const now = new Date();
-    for (let i = 0; i < 10; i++) {
-      const timestamp = new Date(now.getTime() - i * 15 * 60 * 1000);
-      data.push({ id: i.toString(), latitude: 28.59 + Math.random() * 0.01, longitude: 77.02 + Math.random() * 0.01, timestamp: timestamp.toLocaleString() });
+    try {
+      const data = window.localStorage.getItem('locationHistory');
+      if (data) {
+        const arr = JSON.parse(data).map((item, idx) => ({ ...item, id: idx.toString() }));
+        setLocationHistory(arr);
+      } else {
+        setLocationHistory([]);
+      }
+    } catch {
+      setLocationHistory([]);
     }
-    setLocationHistory(data);
   }, []);
 
   const renderItem = ({ item }) => (

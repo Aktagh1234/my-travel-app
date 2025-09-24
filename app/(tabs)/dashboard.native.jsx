@@ -1,12 +1,17 @@
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Image, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import QRCode from 'react-native-qrcode-svg';
+import { supabase } from '../../lib/supabase';
 
 export default function Dashboard() {
   const [location, setLocation] = useState(null);
+  // For local location history
+  const [locationHistory, setLocationHistory] = useState([]);
   const [permissionStatus, setPermissionStatus] = useState("undetermined");
   const [refreshing, setRefreshing] = useState(false);
   const [safetyScore, setSafetyScore] = useState(85);
@@ -17,11 +22,112 @@ export default function Dashboard() {
   ]);
   const router = useRouter();
   const [MapComponents, setMapComponents] = useState(null);
+  const [dtid, setDtid] = useState(null);
+  const intervalRef = useRef();
+  // Load DTID from AsyncStorage on mount
+  useEffect(() => {
+    (async () => {
+      const storedDtid = await AsyncStorage.getItem('dtid');
+      if (storedDtid) setDtid(storedDtid);
+    })();
+  }, []);
+  // Periodically update location in Supabase and local history every 2 minutes
+  useEffect(() => {
+    // Always set up location update interval, even if dtid is not set
+    async function sendLocationToSupabase(coords) {
+      if (!coords) return;
+      try {
+        await supabase.from('locations').insert([
+          {
+            dtid,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      } catch (e) {
+        console.log('Supabase location update error:', e);
+      }
+    }
+
+    // Helper to save location to AsyncStorage history
+    async function saveLocationToHistory(coords) {
+      if (!coords) return;
+      try {
+        const prev = await AsyncStorage.getItem('locationHistory');
+        let arr = [];
+        if (prev) arr = JSON.parse(prev);
+        arr.unshift({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          timestamp: new Date().toISOString(),
+        });
+        // Keep only last 100 entries
+        if (arr.length > 100) arr = arr.slice(0, 100);
+        await AsyncStorage.setItem('locationHistory', JSON.stringify(arr));
+        setLocationHistory(arr);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    let isMounted = true;
+
+    // Immediately update location on mount
+    (async () => {
+      try {
+        const loc = await Location.getCurrentPositionAsync({});
+        if (isMounted) {
+          setLocation(loc.coords);
+          if (dtid) sendLocationToSupabase(loc.coords);
+          saveLocationToHistory(loc.coords);
+          console.log('Location updated (immediate):', loc.coords);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    console.log('Starting location update interval');
+    intervalRef.current = setInterval(async () => {
+      try {
+        const loc = await Location.getCurrentPositionAsync({});
+        if (isMounted) {
+          setLocation(loc.coords);
+          if (dtid) sendLocationToSupabase(loc.coords);
+          saveLocationToHistory(loc.coords);
+          console.log('Location updated (interval):', loc.coords);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 60 * 1000); // 1 minute
+
+    return () => {
+      isMounted = false;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        console.log('Stopped location update interval');
+      }
+    };
+    // Only start interval if permission granted
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissionStatus, dtid]);
+  // Load location history on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const prev = await AsyncStorage.getItem('locationHistory');
+        if (prev) setLocationHistory(JSON.parse(prev));
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     const ensurePermissionAndLocate = async () => {
       const current = await Location.getForegroundPermissionsAsync();
       if (current.status !== "granted") {
+        console.log('Location permission not granted, requesting...');
         const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
         setPermissionStatus(status);
         if (status !== 'granted') {
@@ -76,9 +182,9 @@ export default function Dashboard() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Digital Tourist ID</Text>
         <View style={{ alignItems: 'center', marginVertical: 10 }}>
-          <QRCode value="DTID12345" size={140} />
+          <QRCode value={dtid || "..."} size={140} />
           <Text style={styles.qrCaption}>Show this at check-posts</Text>
-          <View style={styles.dtidBadge}><Text style={styles.dtidBadgeText}>DTID: DTID12345</Text></View>
+          <View style={styles.dtidBadge}><Text style={styles.dtidBadgeText}>DTID: {dtid || "..."}</Text></View>
         </View>
       </View>
 
