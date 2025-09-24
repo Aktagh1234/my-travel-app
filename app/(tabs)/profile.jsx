@@ -33,10 +33,10 @@ export default function Profile() {
       {/* Traveler Info */}
       <View style={styles.userInfo}>
         <Image
-          source={{ uri: "https://i.pravatar.cc/150?img=45" }}
+          source={{ uri: 'https://i.pravatar.cc/100?img=12' }}
           style={styles.avatar}
         />
-        <Text style={styles.userName}>Alex Carter</Text>
+        <Text style={styles.userName}>User ABCD</Text>
         <Text style={styles.userEmail}>Traveler ID: TRV-2025-0912</Text>
       </View>
 

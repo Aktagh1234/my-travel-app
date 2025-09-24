@@ -7,7 +7,7 @@ export default function Account() {
       
       <View style={styles.card}>
         <Text style={styles.label}>Name</Text>
-        <Text style={styles.info}>Alex Carter</Text>
+        <Text style={styles.info}>User ABCD</Text>
       </View>
 
       <View style={styles.card}>

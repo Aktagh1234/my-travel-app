@@ -1,4 +1,3 @@
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -175,7 +174,7 @@ export default function Dashboard() {
         <Image source={{ uri: 'https://i.pravatar.cc/100?img=12' }} style={styles.avatar} />
         <View style={{ marginLeft: 12 }}>
           <Text style={styles.greeting}>Welcome,</Text>
-          <Text style={styles.userName}>John Doe</Text>
+          <Text style={styles.userName}>User ABCD</Text>
         </View>
       </View>
 
@@ -287,7 +286,14 @@ const styles = StyleSheet.create({
   dtidBadge: { backgroundColor: '#4F46E5', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginTop: 10 },
   dtidBadgeText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
   safetyRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
-  safetyScore: { fontSize: 22, fontWeight: 'bold', color: '#10B981' },
+  safetyScore: {
+    fontSize: 18,        // Make the number larger
+    fontWeight: 'bold',
+    color: '#10B981',
+    textAlign: 'center', // Ensure it's centered
+    width: 80,           // Optional: set width to help centering
+    alignSelf: 'center', // Optional: center in parent
+  },
   safetyLabel: { fontSize: 16, color: '#10B981', fontWeight: '600' },
   alertRow: { flexDirection: 'row', alignItems: 'center', borderLeftWidth: 5, backgroundColor: '#F3F4F6', borderRadius: 12, marginBottom: 10, padding: 10, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 4, elevation: 2 },
   alertIcon: { fontSize: 28, marginRight: 10 },
