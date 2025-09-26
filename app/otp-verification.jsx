@@ -24,13 +24,6 @@ const OTPVerificationScreen = () => {
   const router = useRouter();
   const { mobileNumber, dtid, fullName, hasDtid, qrCode, otpForTesting } = useLocalSearchParams();
   
-  // Debug logging
-  console.log('OTP Verification - Received params:');
-  console.log('- mobileNumber:', mobileNumber);
-  console.log('- fullName:', fullName);
-  console.log('- dtid:', dtid);
-  console.log('- hasDtid:', hasDtid);
-  
   const inputRefs = useRef([]);
 
   useEffect(() => {
@@ -102,12 +95,6 @@ const OTPVerificationScreen = () => {
         if (data.user.mobile_number) {
           await AsyncStorage.setItem('mobile_number', data.user.mobile_number);
         }
-
-        console.log('User data saved to AsyncStorage:', {
-          dtid: data.user.dtid,
-          full_name: data.user.full_name,
-          mobile_number: data.user.mobile_number
-        });
 
         Alert.alert(
           'Success!', 
@@ -181,11 +168,11 @@ const OTPVerificationScreen = () => {
               <Text style={styles.phoneNumber}>{mobileNumber}</Text>
             </Text>
             
-            {hasDtid === 'true' && dtid ? (
+            {(hasDtid === 'true' || hasDtid === true) && dtid && dtid !== 'null' && dtid !== '' && dtid !== 'undefined' ? (
               <View style={styles.dtidContainer}>
                 <Text style={styles.dtidLabel}>Digital Tourist ID:</Text>
                 <Text style={styles.dtidValue}>{dtid}</Text>
-                {qrCode && (
+                {qrCode && qrCode !== 'null' && qrCode !== '' && qrCode !== 'undefined' && (
                   <Text style={styles.qrCodeIndicator}>✓ QR Code Available</Text>
                 )}
               </View>
