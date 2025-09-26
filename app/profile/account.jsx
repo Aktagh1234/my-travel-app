@@ -1,23 +1,88 @@
-import { View, Text, StyleSheet } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 export default function Account() {
+  const [userData, setUserData] = useState({
+    full_name: '',
+    dtid: '',
+    mobile_number: '',
+    email: ''
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const [fullName, dtid, mobileNumber, userDataJson] = await Promise.all([
+        AsyncStorage.getItem('full_name'),
+        AsyncStorage.getItem('dtid'),
+        AsyncStorage.getItem('mobile_number'),
+        AsyncStorage.getItem('user_data')
+      ]);
+
+      let parsedUserData = {};
+      if (userDataJson) {
+        try {
+          parsedUserData = JSON.parse(userDataJson);
+        } catch (e) {
+          console.log('Error parsing user_data:', e);
+        }
+      }
+
+      setUserData({
+        full_name: fullName || parsedUserData.full_name || 'Not Available',
+        dtid: dtid || parsedUserData.dtid || 'Not Available',
+        mobile_number: mobileNumber || parsedUserData.mobile_number || 'Not Available',
+        email: parsedUserData.email || 'Not Available'
+      });
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      setUserData({
+        full_name: 'Error Loading',
+        dtid: 'Error Loading',
+        mobile_number: 'Error Loading',
+        email: 'Error Loading'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#1e90ff" />
+        <Text style={styles.loadingText}>Loading account information...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Account Information</Text>
       
       <View style={styles.card}>
         <Text style={styles.label}>Name</Text>
-        <Text style={styles.info}>User ABCD</Text>
+        <Text style={styles.info}>{userData.full_name}</Text>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.label}>Traveler ID</Text>
-        <Text style={styles.info}>TRV-2025-0912</Text>
+        <Text style={styles.label}>Digital Tourist ID</Text>
+        <Text style={styles.info}>{userData.dtid}</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>Mobile Number</Text>
+        <Text style={styles.info}>{userData.mobile_number}</Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.label}>Email</Text>
-        <Text style={styles.info}>alex.carter@example.com</Text>
+        <Text style={styles.info}>{userData.email}</Text>
       </View>
     </View>
   );
@@ -57,5 +122,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#333",
     fontWeight: "500",
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
   },
 });

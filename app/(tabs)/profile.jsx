@@ -1,18 +1,31 @@
 // app/(tabs)/profile.jsx
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
 export default function Profile() {
   const router = useRouter();
+  const [userName, setUserName] = useState('User');
+  const [dtid, setDtid] = useState('');
+
+  // Load user data from AsyncStorage
+  useEffect(() => {
+    (async () => {
+      const storedUserName = await AsyncStorage.getItem('full_name');
+      const storedDtid = await AsyncStorage.getItem('dtid');
+      if (storedUserName) setUserName(storedUserName);
+      if (storedDtid) setDtid(storedDtid);
+    })();
+  }, []);
 
   const options = [
     { title: "Account", icon: "person-outline", route: "/profile/account" },
@@ -36,8 +49,8 @@ export default function Profile() {
           source={{ uri: 'https://i.pravatar.cc/100?img=12' }}
           style={styles.avatar}
         />
-        <Text style={styles.userName}>User ABCD</Text>
-        <Text style={styles.userEmail}>Traveler ID: TRV-2025-0912</Text>
+        <Text style={styles.userName}>{userName}</Text>
+        <Text style={styles.userEmail}>Traveler ID: {dtid || 'Not Available'}</Text>
       </View>
 
       {/* Options */}

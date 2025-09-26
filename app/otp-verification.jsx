@@ -22,7 +22,14 @@ const OTPVerificationScreen = () => {
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const router = useRouter();
-  const { mobileNumber } = useLocalSearchParams();
+  const { mobileNumber, dtid, fullName, hasDtid, qrCode, otpForTesting } = useLocalSearchParams();
+  
+  // Debug logging
+  console.log('OTP Verification - Received params:');
+  console.log('- mobileNumber:', mobileNumber);
+  console.log('- fullName:', fullName);
+  console.log('- dtid:', dtid);
+  console.log('- hasDtid:', hasDtid);
   
   const inputRefs = useRef([]);
 
@@ -81,9 +88,26 @@ const OTPVerificationScreen = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Store authentication token
+        // Store authentication token and user data
         await AsyncStorage.setItem('auth_token', data.token);
         await AsyncStorage.setItem('user_data', JSON.stringify(data.user));
+        
+        // Store individual fields for easy access
+        if (data.user.dtid) {
+          await AsyncStorage.setItem('dtid', data.user.dtid);
+        }
+        if (data.user.full_name) {
+          await AsyncStorage.setItem('full_name', data.user.full_name);
+        }
+        if (data.user.mobile_number) {
+          await AsyncStorage.setItem('mobile_number', data.user.mobile_number);
+        }
+
+        console.log('User data saved to AsyncStorage:', {
+          dtid: data.user.dtid,
+          full_name: data.user.full_name,
+          mobile_number: data.user.mobile_number
+        });
 
         Alert.alert(
           'Success!', 
@@ -149,11 +173,27 @@ const OTPVerificationScreen = () => {
       >
         <View style={styles.content}>
           <View style={styles.headerContainer}>
-            <Text style={styles.title}>Verify Phone Number</Text>
+            <Text style={styles.title}>
+              {fullName ? `Welcome, ${fullName}!` : 'Verify Phone Number'}
+            </Text>
             <Text style={styles.subtitle}>
               We've sent a 6-digit code to{'\n'}
               <Text style={styles.phoneNumber}>{mobileNumber}</Text>
             </Text>
+            
+            {hasDtid === 'true' && dtid ? (
+              <View style={styles.dtidContainer}>
+                <Text style={styles.dtidLabel}>Digital Tourist ID:</Text>
+                <Text style={styles.dtidValue}>{dtid}</Text>
+                {qrCode && (
+                  <Text style={styles.qrCodeIndicator}>✓ QR Code Available</Text>
+                )}
+              </View>
+            ) : (
+              <View style={styles.dtidContainer}>
+                <Text style={styles.noDtidText}>No Digital Tourist ID found for this number</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.otpContainer}>
@@ -325,6 +365,41 @@ const styles = StyleSheet.create({
     color: '#e74c3c',
     fontSize: 16,
     fontWeight: '600',
+  },
+  dtidContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  dtidLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  dtidValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  noDtidText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  qrCodeIndicator: {
+    fontSize: 12,
+    color: '#4CAF50',
+    textAlign: 'center',
+    marginTop: 5,
+    fontWeight: '500',
   },
 });
 

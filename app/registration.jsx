@@ -1,4 +1,5 @@
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -55,19 +56,41 @@ export default function Registration() {
       const data = await response.json();
 
       if (response.ok) {
+        const userGreeting = data.full_name ? `Welcome, ${data.full_name}!` : 'Welcome!';
+        const dtidMessage = data.has_dtid 
+          ? `\n\nYour Digital Tourist ID: ${data.dtid}` 
+          : '\n\nNote: No Digital Tourist ID found for this number.';
+          
         Alert.alert(
-          'Success!', 
-          'OTP has been sent to your mobile number. Please check your messages.',
+          userGreeting, 
+          `OTP has been sent to your mobile number. Please check your messages.${dtidMessage}`,
           [
             {
               text: 'OK',
-              onPress: () => {
+              onPress: async () => {
                 console.log('Registration successful:', data);
+                console.log('User name from server:', data.full_name || 'Not found');
+                console.log('DTID found:', data.dtid || 'None');
+                console.log('QR Code data:', data.qr_code ? 'Available' : 'Not available');
+                console.log('Passing fullName to OTP screen:', data.full_name);
+                
+                // Store initial user data for immediate use
+                if (data.full_name) {
+                  await AsyncStorage.setItem('full_name', data.full_name);
+                }
+                if (data.dtid) {
+                  await AsyncStorage.setItem('dtid', data.dtid);
+                }
+                
                 // Navigate to OTP verification screen
                 router.push({
                   pathname: '/otp-verification',
                   params: { 
                     mobileNumber: `+91${mobileNumber}`,
+                    dtid: data.dtid || null,
+                    fullName: data.full_name || null,
+                    hasDtid: data.has_dtid || false,
+                    qrCode: data.qr_code ? JSON.stringify(data.qr_code) : null,
                     otpForTesting: data.otp_for_testing // Include OTP for testing if SMS fails
                   }
                 });
