@@ -1,145 +1,268 @@
 
-import * as Location from "expo-location";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import API_CONFIG from '../config/api';
 
 export default function Registration() {
-  const [regId, setRegId] = useState("");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleVerify = async () => {
-    if (!regId || !name || !phone || !email) {
-      Alert.alert("Missing Fields", "Please fill in all fields.");
+  const validateMobileNumber = (number) => {
+    // Indian mobile number validation (10 digits)
+    const mobileRegex = /^[6-9]\d{9}$/;
+    return mobileRegex.test(number);
+  };
+
+  const handleRegistration = async () => {
+    // Validate mobile number
+    if (!mobileNumber.trim()) {
+      Alert.alert('Error', 'Please enter your mobile number');
       return;
     }
-    Alert.alert(
-      "Registration Complete!",
-      `Welcome, ${name}!\nYou can now use the app.`,
-      [
-        {
-          text: "OK",
-          onPress: async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-              Alert.alert(
-                "Permission Denied",
-                "Location permission is required to share your location."
-              );
-              return;
-            }
-            const location = await Location.getCurrentPositionAsync({});
-            console.log("User location:", location.coords);
-            router.replace("/(tabs)/dashboard");
-          },
+
+    if (!validateMobileNumber(mobileNumber)) {
+      Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REGISTER}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ],
-      { cancelable: false }
-    );
+        body: JSON.stringify({
+          mobile_number: `+91${mobileNumber}`, // Adding country code for India
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const userGreeting = data.full_name ? `Welcome, ${data.full_name}!` : 'Welcome!';
+        const dtidMessage = data.has_dtid 
+          ? `\n\nYour Digital Tourist ID: ${data.dtid}` 
+          : '\n\nNote: No Digital Tourist ID found for this number.';
+          
+        Alert.alert(
+          userGreeting, 
+          `OTP has been sent to your mobile number. Please check your messages.${dtidMessage}`,
+          [
+            {
+              text: 'OK',
+              onPress: async () => {
+                console.log('Registration successful:', data);
+                console.log('User name from server:', data.full_name || 'Not found');
+                console.log('DTID found:', data.dtid || 'None');
+                console.log('QR Code data:', data.qr_code ? 'Available' : 'Not available');
+                console.log('Passing fullName to OTP screen:', data.full_name);
+                
+                // Store initial user data for immediate use
+                if (data.full_name) {
+                  await AsyncStorage.setItem('full_name', data.full_name);
+                }
+                if (data.dtid) {
+                  await AsyncStorage.setItem('dtid', data.dtid);
+                }
+                
+                // Navigate to OTP verification screen
+                router.push({
+                  pathname: '/otp-verification',
+                  params: { 
+                    mobileNumber: `+91${mobileNumber}`,
+                    dtid: data.dtid || null,
+                    fullName: data.full_name || null,
+                    hasDtid: data.has_dtid || false,
+                    qrCode: data.qr_code ? JSON.stringify(data.qr_code) : null,
+                    otpForTesting: data.otp_for_testing // Include OTP for testing if SMS fails
+                  }
+                });
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Error', data.message || 'Registration failed');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert('Error', 'Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatMobileNumber = (text) => {
+    // Remove non-digits and limit to 10 digits
+    const cleaned = text.replace(/\D/g, '').slice(0, 10);
+    setMobileNumber(cleaned);
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.card}>
-        <Text style={styles.title}>Register Your ID</Text>
-        <Text style={styles.subtitle}>Enter the registration ID given at the tourist spot.</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          placeholderTextColor="#aaa"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Phone Number"
-          placeholderTextColor="#aaa"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email Address"
-          placeholderTextColor="#aaa"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Registration ID"
-          placeholderTextColor="#aaa"
-          value={regId}
-          onChangeText={setRegId}
-        />
-        <TouchableOpacity style={styles.button} onPress={handleVerify}>
-          <Text style={styles.buttonText}>Verify</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardContainer}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.title}>Tourist Registration</Text>
+            <Text style={styles.subtitle}>
+              Enter your mobile number to get started
+            </Text>
+          </View>
+
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Mobile Number</Text>
+              <View style={styles.phoneInputContainer}>
+                <Text style={styles.countryCode}>+91</Text>
+                <TextInput
+                  style={styles.phoneInput}
+                  placeholder="Enter 10-digit mobile number"
+                  value={mobileNumber}
+                  onChangeText={formatMobileNumber}
+                  keyboardType="numeric"
+                  maxLength={10}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.registerButton, loading && styles.disabledButton]}
+              onPress={handleRegistration}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.registerButtonText}>Send OTP</Text>
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.infoText}>
+              By continuing, you agree to our Terms of Service and Privacy Policy
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#f8f9fa',
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
     padding: 20,
   },
-  card: {
-    width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 30,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2c3e50',
     marginBottom: 10,
-    color: "#333",
-    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    color: '#7f8c8d',
+    textAlign: 'center',
+  },
+  formContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  inputContainer: {
     marginBottom: 20,
-    textAlign: "center",
   },
-  input: {
-    width: "100%",
-    height: 50,
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 15,
+  label: {
     fontSize: 16,
-    backgroundColor: "#fafafa",
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 8,
   },
-  button: {
-    backgroundColor: "#007AFF",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
+  phoneInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e1e8ed',
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
   },
-  buttonText: {
-    color: "#fff",
+  countryCode: {
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#2c3e50',
+    backgroundColor: '#e9ecef',
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  phoneInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#2c3e50',
+  },
+  registerButton: {
+    backgroundColor: '#3498db',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  disabledButton: {
+    backgroundColor: '#bdc3c7',
+  },
+  registerButtonText: {
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: '600',
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginTop: 20,
+    lineHeight: 18,
   },
 });

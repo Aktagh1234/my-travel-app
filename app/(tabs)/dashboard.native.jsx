@@ -22,12 +22,15 @@ export default function Dashboard() {
   const router = useRouter();
   const [MapComponents, setMapComponents] = useState(null);
   const [dtid, setDtid] = useState(null);
+  const [userName, setUserName] = useState('User');
   const intervalRef = useRef();
-  // Load DTID from AsyncStorage on mount
+  // Load user data from AsyncStorage on mount
   useEffect(() => {
     (async () => {
       const storedDtid = await AsyncStorage.getItem('dtid');
+      const storedUserName = await AsyncStorage.getItem('full_name');
       if (storedDtid) setDtid(storedDtid);
+      if (storedUserName) setUserName(storedUserName);
     })();
   }, []);
   // Periodically update location in Supabase and local history every 2 minutes
@@ -174,7 +177,7 @@ export default function Dashboard() {
         <Image source={{ uri: 'https://i.pravatar.cc/100?img=12' }} style={styles.avatar} />
         <View style={{ marginLeft: 12 }}>
           <Text style={styles.greeting}>Welcome,</Text>
-          <Text style={styles.userName}>User ABCD</Text>
+          <Text style={styles.userName}>{userName}</Text>
         </View>
       </View>
 
