@@ -11,7 +11,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: true }}>
+      <Stack screenOptions={{ headerShown: false }}>
         {/* The index, registration, and dashboard pages will be automatically picked up from app/ */}
         {/* No need to manually render Registration here */}
       </Stack>
