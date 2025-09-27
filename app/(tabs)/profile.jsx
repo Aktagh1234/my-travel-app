@@ -4,12 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Profile() {
@@ -46,7 +46,7 @@ export default function Profile() {
       {/* Traveler Info */}
       <View style={styles.userInfo}>
         <Image
-          source={{ uri: 'https://i.pravatar.cc/100?img=12' }}
+          source={require('../../assets/images/profile-photo.png')}
           style={styles.avatar}
         />
         <Text style={styles.userName}>{userName}</Text>
