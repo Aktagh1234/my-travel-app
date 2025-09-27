@@ -1,30 +1,34 @@
 
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import * as Location from "expo-location";
+import React, { useEffect, useState } from "react";
 import { FlatList, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 
 // Static data for demo
-const PLACES = [
+const SAMPLE_PLACES = [
   {
     id: 1,
     type: "attraction",
-    name: "Red Fort",
-    distance: "2.1 km",
-    rating: 4.7,
-    entryFee: "₹500",
+    name: "Local Museum",
+    distance: "1.2 km",
+    rating: 4.2,
+    entryFee: "₹50",
     hours: "9am-6pm",
     safe: true,
     restricted: false,
+    coordinates: { latitude: 28.6139, longitude: 77.2090 }, // Delhi coordinates
   },
   {
     id: 2,
     type: "hotel",
-    name: "Hotel SafeStay",
-    distance: "1.2 km",
-    rating: 4.3,
+    name: "Heritage Hotel",
+    distance: "2.3 km",
+    rating: 4.5,
     dtidCheckin: true,
     safe: true,
     restricted: false,
+    coordinates: { latitude: 28.6127, longitude: 77.2073 },
   },
   {
     id: 3,
@@ -34,6 +38,7 @@ const PLACES = [
     cuisine: "Veg, Local",
     safe: true,
     restricted: false,
+    coordinates: { latitude: 28.6155, longitude: 77.2167 },
   },
   {
     id: 4,
@@ -45,6 +50,7 @@ const PLACES = [
     hours: "10am-5pm",
     safe: false,
     restricted: true,
+    coordinates: { latitude: 28.6100, longitude: 77.2300 },
   },
   {
     id: 5,
@@ -55,6 +61,7 @@ const PLACES = [
     dtidCheckin: false,
     safe: false,
     restricted: true,
+    coordinates: { latitude: 28.6200, longitude: 77.2000 },
   },
 ];
 
@@ -65,9 +72,11 @@ export default function ExploreTab() {
   const [category, setCategory] = useState("All");
   const [safeOnly, setSafeOnly] = useState(true);
   const [warning, setWarning] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [permissionStatus, setPermissionStatus] = useState("undetermined");
 
   // Filtered places
-  const filtered = PLACES.filter((p) => {
+  const filtered = SAMPLE_PLACES.filter((p) => {
     if (safeOnly && !p.safe) return false;
     if (category !== "All") {
       if (category === "Attractions" && p.type !== "attraction") return false;
@@ -78,6 +87,29 @@ export default function ExploreTab() {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  useEffect(() => {
+    const setupLocation = async () => {
+      const current = await Location.getForegroundPermissionsAsync();
+      if (current.status !== "granted") {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        setPermissionStatus(status);
+        if (status !== 'granted') {
+          return;
+        }
+      } else {
+        setPermissionStatus('granted');
+      }
+
+      try {
+        const loc = await Location.getCurrentPositionAsync({});
+        setLocation(loc.coords);
+      } catch (error) {
+        console.log('Error getting location:', error);
+      }
+    };
+    setupLocation();
+  }, []);
 
   const handlePlacePress = (place) => {
     if (place.restricted) {
@@ -118,10 +150,40 @@ export default function ExploreTab() {
         </View>
       </ScrollView>
 
-      {/* Map Placeholder */}
-      <View style={styles.mapPlaceholder}>
-        <Ionicons name="map" size={40} color="#4F46E5" />
-        <Text style={{ color: '#888', marginTop: 4 }}>Map view coming soon</Text>
+      {/* Real map using react-native-maps */}
+      <View style={styles.map}>
+        {location && permissionStatus === 'granted' ? (
+          <MapView
+            style={styles.mapView}
+            initialRegion={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+          >
+            {filtered.map((place) => (
+              <Marker
+                key={place.id}
+                coordinate={place.coordinates}
+                title={place.name}
+                description={place.distance}
+                pinColor={place.restricted ? 'red' : 'green'}
+              />
+            ))}
+          </MapView>
+        ) : (
+          <View style={styles.mapPlaceholder}>
+            <Text style={styles.mapPlaceholderText}>
+              {permissionStatus === 'denied' 
+                ? 'Location permission required to show map'
+                : 'Loading map...'
+              }
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* List View: Swipeable Cards */}
@@ -200,7 +262,10 @@ const styles = StyleSheet.create({
   filterText: { color: '#4F46E5', fontWeight: 'bold', fontSize: 14 },
   filterTextActive: { color: '#fff' },
   safeToggleRow: { flexDirection: 'row', alignItems: 'center', marginLeft: 8, backgroundColor: '#F3F4F6', borderRadius: 16, paddingHorizontal: 10 },
-  mapPlaceholder: { height: 120, backgroundColor: '#E5E7EB', borderRadius: 16, margin: 16, alignItems: 'center', justifyContent: 'center' },
+  map: { height: 250, margin: 16, borderRadius: 16, overflow: 'hidden', backgroundColor: '#E5E7EB' },
+  mapView: { flex: 1 },
+  mapPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5E7EB' },
+  mapPlaceholderText: { fontSize: 16, color: '#666', textAlign: 'center', paddingHorizontal: 20 },
   card: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, marginBottom: 14, padding: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   cardTitle: { fontSize: 17, fontWeight: 'bold', color: '#1E293B' },
   cardSub: { fontSize: 13, color: '#6B7280', marginBottom: 2 },
