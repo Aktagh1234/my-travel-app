@@ -68,11 +68,6 @@ export default function Registration() {
             {
               text: 'OK',
               onPress: async () => {
-                console.log('Registration successful:', data);
-                console.log('User name from server:', data.full_name || 'Not found');
-                console.log('DTID found:', data.dtid || 'None');
-                console.log('QR Code data:', data.qr_code ? 'Available' : 'Not available');
-                console.log('Passing fullName to OTP screen:', data.full_name);
                 
                 // Store initial user data for immediate use
                 if (data.full_name) {
@@ -87,11 +82,11 @@ export default function Registration() {
                   pathname: '/otp-verification',
                   params: { 
                     mobileNumber: `+91${mobileNumber}`,
-                    dtid: data.dtid || null,
-                    fullName: data.full_name || null,
-                    hasDtid: data.has_dtid || false,
-                    qrCode: data.qr_code ? JSON.stringify(data.qr_code) : null,
-                    otpForTesting: data.otp_for_testing // Include OTP for testing if SMS fails
+                    dtid: data.dtid || '',
+                    fullName: data.full_name || '',
+                    hasDtid: data.has_dtid ? 'true' : 'false',
+                    qrCode: data.qr_code ? JSON.stringify(data.qr_code) : '',
+                    otpForTesting: data.otp_for_testing || '' // Include OTP for testing if SMS fails
                   }
                 });
               }

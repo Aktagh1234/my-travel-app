@@ -1,45 +1,199 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# =======================
+# DEPENDENCIES
+# =======================
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn/
+.pnp.*
 
+# =======================
+# EXPO & REACT NATIVE
+# =======================
 # Expo
 .expo/
+.expo-shared/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
-.kotlin/
+# React Native
+.bundle
+.metro
+.metro-health-check*
+
+# =======================
+# NATIVE PLATFORMS
+# =======================
+# iOS
+ios/
+ios/build/
+ios/Pods/
+ios/*.xcworkspace
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserdata
+
+# Android
+android/
+android/app/build/
+android/app/release/
+android/build/
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/keystore.properties
+android/*/build/
+android/*/.cxx/
+android/.cxx/
+
+# Native certificates and keys
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.keystore
+*.pem
+.kotlin/
 
-# Metro
-.metro-health-check*
+# =======================
+# BUILD OUTPUTS
+# =======================
+build/
+dist/
+out/
+coverage/
+.nyc_output/
 
-# debug
+# =======================
+# ENVIRONMENT & CONFIG
+# =======================
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Config files that might contain sensitive data
+config/local.js
+config/development.js
+config/production.js
+
+# =======================
+# DEVELOPMENT & TESTING
+# =======================
+# Development files
+scratch.js
+scratch.jsx
+temp.js
+temp.jsx
+debug.js
+debug.jsx
+playground.js
+playground.jsx
+test-*.js
+test-*.jsx
+test-*.ts
+test-*.tsx
+example.js
+example.jsx
+
+# Testing
+jest.config.js
+*.test.js
+*.test.jsx
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.jsx
+*.spec.ts
+*.spec.tsx
+
+# =======================
+# LOGS & RUNTIME
+# =======================
+# Logs
+logs/
+*.log
+server.log
+app.log
 npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macOS
-.DS_Store
-*.pem
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-
-# local env files
-.env
-.env*.local
-
-# typescript
+# =======================
+# CACHE & TEMPORARY
+# =======================
+# Cache directories
+.cache/
+.tmp/
+tmp/
+temp/
+.eslintcache
 *.tsbuildinfo
 
-app-example
+# =======================
+# IDE & EDITORS
+# =======================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
-# generated native folders
-/ios
-/android
+# IntelliJ/WebStorm
+.idea/
+
+# Vim/Emacs
+*.swp
+*.swo
+*~
+
+# =======================
+# OPERATING SYSTEMS
+# =======================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Linux
+*~
+.directory
+
+# =======================
+# SUPABASE & BACKEND
+# =======================
+# Local Supabase
+.supabase/
+
+# =======================
+# MISC
+# =======================
+app-example
