@@ -174,7 +174,11 @@ export default function Dashboard() {
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View style={styles.headerRow}>
-        <Image source={{ uri: 'https://i.pravatar.cc/100?img=12' }} style={styles.avatar} />
+        <Image 
+          source={require('../../assets/images/profile-photo.png')} 
+          style={styles.avatar}
+          key={`avatar-${Date.now()}`}
+        />
         <View style={{ marginLeft: 12 }}>
           <Text style={styles.greeting}>Welcome,</Text>
           <Text style={styles.userName}>{userName}</Text>

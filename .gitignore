@@ -211,6 +211,29 @@ config/api.backup.js
 config/*.local.js
 
 # =======================
+# MOBILE APP SPECIFIC
+# =======================
+# Generated QR codes
+qr-codes/
+*.qr.png
+*.qr.jpg
+dtid-*.png
+dtid-*.jpg
+
+# App store assets
+app-store-assets/
+play-store-assets/
+screenshots/
+
+# Expo generated files
+.expo-shared/
+expo-generated/
+
+# React Native asset bundles
+*.bundle.js
+*.bundle.map
+
+# =======================
 # MISC
 # =======================
 app-example
