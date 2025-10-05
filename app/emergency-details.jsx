@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Emergency() {
   const colorScheme = useColorScheme() ?? 'light';
@@ -92,7 +93,8 @@ export default function Emergency() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}> 
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}> 
       <Text style={[styles.title, { color: theme.primary }]}>Emergency Contacts</Text>
 
       <FlatList
@@ -170,10 +172,12 @@ export default function Emergency() {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1 },
   container: { flex: 1, padding: 20 },
   title: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   contactCard: {

@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tabs
       screenOptions={{
@@ -11,10 +14,14 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: "#999",
         tabBarStyle: {
           backgroundColor: "#fff",
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
+          height: 50 + insets.bottom,
+          paddingBottom: insets.bottom,
+          paddingTop: 0,
           borderTopWidth: 0,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
           // Elevation/shadow so bar sits above system nav
           ...(Platform.OS === 'android'
             ? { elevation: 12 }
@@ -38,6 +45,16 @@ export default function TabsLayout() {
           title: "Alerts",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="alert-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="itinerary"
+        options={{
+          title: "Itinerary",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
       />

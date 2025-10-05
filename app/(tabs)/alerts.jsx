@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Alerts() {
   const [alerts] = useState([
@@ -22,7 +23,8 @@ export default function Alerts() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
       <Text style={styles.header}>All Alerts</Text>
       <FlatList
         data={alerts}
@@ -32,10 +34,12 @@ export default function Alerts() {
         ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
       />
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   header: { fontSize: 20, fontWeight: 'bold', color: '#1E293B', padding: 16, paddingBottom: 8 },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, padding: 12, borderLeftWidth: 5, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
