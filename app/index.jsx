@@ -7,7 +7,7 @@ export default function Home() {
 
   return (
     <ImageBackground
-      source={{ uri: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e" }}
+      source={require("../assets/images/startpage.png")}
       style={styles.background}
       blurRadius={2}
     >
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -54,13 +54,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#000",
     textAlign: "center",
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 18,
-    color: "#ddd",
+    color: "#333",
     textAlign: "center",
     marginBottom: 40,
   },

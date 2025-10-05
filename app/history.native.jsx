@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from "react";
 import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function History() {
   const [locationHistory, setLocationHistory] = useState([]);
@@ -11,8 +13,6 @@ export default function History() {
   useEffect(() => {
     (async () => {
       try {
-        const raw = await import('@react-native-async-storage/async-storage');
-        const AsyncStorage = raw.default || raw;
         const data = await AsyncStorage.getItem('locationHistory');
         if (data) {
           // Add id field for FlatList
@@ -40,7 +40,8 @@ export default function History() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
       <Text style={styles.title}>Location History (Every 15 mins)</Text>
 
       <TouchableOpacity style={styles.seeAllButton} onPress={() => setShowAllMap(true)}>
@@ -96,10 +97,12 @@ export default function History() {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: "#f5f5f5" },
   container: { flex: 1, backgroundColor: "#f5f5f5", padding: 15 },
   title: { fontSize: 22, fontWeight: "bold", color: "#333", marginBottom: 15, textAlign: "center" },
   seeAllButton: { backgroundColor: "#1e90ff", padding: 12, borderRadius: 15, marginBottom: 15, alignItems: "center" },

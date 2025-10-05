@@ -4,7 +4,9 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Image, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import MapView, { Marker } from 'react-native-maps';
 import QRCode from 'react-native-qrcode-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 
 export default function Dashboard() {
@@ -20,7 +22,6 @@ export default function Dashboard() {
     { id: 3, type: 'info', title: 'Checkpoint Cleared', time: 'Yesterday 2:10 PM', status: 'Resolved' },
   ]);
   const router = useRouter();
-  const [MapComponents, setMapComponents] = useState(null);
   const [dtid, setDtid] = useState(null);
   const [userName, setUserName] = useState('User');
   const intervalRef = useRef();
@@ -155,12 +156,7 @@ export default function Dashboard() {
     ensurePermissionAndLocate();
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      const mod = await import('react-native-maps');
-      setMapComponents({ MapView: mod.default, Marker: mod.Marker });
-    })();
-  }, []);
+
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -172,7 +168,14 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
       <View style={styles.headerRow}>
         <Image 
           source={require('../../assets/images/profile-photo.png')} 
@@ -250,25 +253,23 @@ export default function Dashboard() {
           </View>
         ) : (
           <View style={{ height: 160, borderRadius: 12, overflow: 'hidden' }}>
-            {MapComponents ? (
-              <MapComponents.MapView
-                style={{ flex: 1 }}
-                pointerEvents="none"
-                initialRegion={{
-                  latitude: location?.latitude || 28.6139,
-                  longitude: location?.longitude || 77.2090,
-                  latitudeDelta: 0.02,
-                  longitudeDelta: 0.02,
-                }}
-              >
-                {location && (
-                  <MapComponents.Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} />
-                )}
-              </MapComponents.MapView>
-            ) : null}
+            <MapView
+              style={{ flex: 1 }}
+              pointerEvents="none"
+              initialRegion={{
+                latitude: location?.latitude || 28.6139,
+                longitude: location?.longitude || 77.2090,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
+              }}
+            >
+              {location && (
+                <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} />
+              )}
+            </MapView>
           </View>
         )}
-        <View style={{ flexDirection: 'row', marginTop: 12, gap: 10 }}>
+        <View style={styles.quickButtonsContainer}>
           <TouchableOpacity style={[styles.quickBtn, { backgroundColor: '#4F46E5' }]} onPress={() => router.push('/history')}>
             <Text style={styles.quickBtnText}>View History</Text>
           </TouchableOpacity>
@@ -278,11 +279,17 @@ export default function Dashboard() {
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB', padding: 0 },
+  safeArea: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  scrollContent: { 
+    paddingBottom: 100,
+    flexGrow: 1 
+  },
   headerRow: { flexDirection: 'row', alignItems: 'center', padding: 24, paddingBottom: 10 },
   avatar: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: '#4F46E5' },
   greeting: { fontSize: 16, color: '#6B7280' },
@@ -310,8 +317,29 @@ const styles = StyleSheet.create({
   statusChipText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
   viewAllBtn: { marginTop: 8, alignSelf: 'flex-end', backgroundColor: '#4F46E5', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 8 },
   viewAllBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14 },
-  quickBtn: { borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
-  quickBtnText: { color: '#fff', fontWeight: 'bold' },
+  quickButtonsContainer: { 
+    flexDirection: 'row', 
+    marginTop: 16, 
+    gap: 12,
+    marginBottom: 8
+  },
+  quickBtn: { 
+    flex: 1,
+    borderRadius: 12, 
+    paddingHorizontal: 16, 
+    paddingVertical: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3
+  },
+  quickBtnText: { 
+    color: '#fff', 
+    fontWeight: 'bold',
+    fontSize: 14
+  },
 });
 
 
