@@ -2,86 +2,213 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
-import { 
-  Animated, 
-  FlatList, 
-  Modal, 
-  ScrollView, 
-  StyleSheet, 
-  Switch, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  View,
-  Dimensions,
-  Platform
+import {
+    Animated,
+    Dimensions,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width: screenWidth } = Dimensions.get('window');
 
-// Static data for demo
-const SAMPLE_PLACES = [
+// Northeast India Places Data
+const NORTHEAST_PLACES = [
   {
     id: 1,
     type: "attraction",
-    name: "Local Museum",
-    distance: "1.2 km",
-    rating: 4.2,
-    entryFee: "₹50",
-    hours: "9am-6pm",
+    name: "Kaziranga National Park",
+    distance: "2.5 km",
+    rating: 4.8,
+    entryFee: "₹250",
+    hours: "6am-5pm",
     safe: true,
     restricted: false,
-    coordinates: { latitude: 28.6139, longitude: 77.2090 }, // Delhi coordinates
+    permits: "Forest Department Permit",
+    tribalArea: false,
+    coordinates: { latitude: 26.5745, longitude: 93.1717 },
+    description: "Famous for one-horned rhinoceros and diverse wildlife",
+    bestTime: "Nov-Apr"
   },
   {
     id: 2,
-    type: "hotel",
-    name: "Heritage Hotel",
-    distance: "2.3 km",
-    rating: 4.5,
-    dtidCheckin: true,
+    type: "cultural",
+    name: "Majuli Island Satras",
+    distance: "15.2 km",
+    rating: 4.6,
+    entryFee: "Free",
+    hours: "5am-8pm",
     safe: true,
     restricted: false,
-    coordinates: { latitude: 28.6127, longitude: 77.2073 },
+    permits: "District Administration",
+    tribalArea: true,
+    coordinates: { latitude: 27.0173, longitude: 94.2152 },
+    description: "Vaishnavite monasteries on world's largest river island",
+    culturalNote: "Respect Mishing & Deori tribal customs"
   },
   {
     id: 3,
-    type: "food",
-    name: "Delhi Chaat Corner",
-    distance: "0.8 km",
-    cuisine: "Veg, Local",
+    type: "hotel",
+    name: "Tawang Heritage Lodge",
+    distance: "3.8 km",
+    rating: 4.4,
+    dtidCheckin: true,
     safe: true,
-    restricted: false,
-    coordinates: { latitude: 28.6155, longitude: 77.2167 },
+    restricted: true,
+    permits: "ILP + RAP Required",
+    tribalArea: true,
+    coordinates: { latitude: 27.5856, longitude: 91.8589 },
+    description: "Traditional Monpa architecture with mountain views",
+    altitude: "3,048m"
   },
   {
     id: 4,
-    type: "attraction",
-    name: "Haunted Fort",
-    distance: "5.5 km",
-    rating: 3.9,
-    entryFee: "₹200",
-    hours: "10am-5pm",
-    safe: false,
-    restricted: true,
-    coordinates: { latitude: 28.6100, longitude: 77.2300 },
+    type: "food",
+    name: "Khasi Traditional Kitchen",
+    distance: "0.6 km",
+    cuisine: "Khasi, Tribal",
+    safe: true,
+    restricted: false,
+    permits: "None",
+    tribalArea: true,
+    coordinates: { latitude: 25.5788, longitude: 91.8933 },
+    description: "Authentic Khasi tribal cuisine with organic ingredients",
+    speciality: "Jadoh, Dohneiiong, Tungrymbai"
   },
   {
     id: 5,
+    type: "adventure",
+    name: "Living Root Bridges Trek",
+    distance: "8.7 km",
+    rating: 4.9,
+    difficulty: "Moderate",
+    duration: "4-6 hours",
+    safe: true,
+    restricted: false,
+    permits: "Local Guide Mandatory",
+    tribalArea: true,
+    coordinates: { latitude: 25.2644, longitude: 91.7898 },
+    description: "UNESCO heritage bio-engineering by Khasi tribe",
+    culturalNote: "Sacred groves - photography restricted"
+  },
+  {
+    id: 6,
+    type: "attraction",
+    name: "Hornbill Festival Grounds",
+    distance: "12.3 km",
+    rating: 4.7,
+    entryFee: "₹500",
+    hours: "9am-6pm",
+    safe: true,
+    restricted: false,
+    permits: "Photography Permit",
+    tribalArea: true,
+    coordinates: { latitude: 25.6751, longitude: 94.1086 },
+    description: "Celebration of Naga tribal culture and traditions",
+    seasonalNote: "Main festival: Dec 1-10"
+  },
+  {
+    id: 7,
+    type: "cultural",
+    name: "Konyak Village (Mon)",
+    distance: "45.2 km",
+    rating: 4.3,
+    entryFee: "₹200",
+    hours: "Daylight only",
+    safe: true,
+    restricted: true,
+    permits: "Tribal Elder Permission",
+    tribalArea: true,
+    coordinates: { latitude: 26.7271, longitude: 95.2432 },
+    description: "Last headhunter tribe with traditional tattoos",
+    culturalNote: "Extreme respect required - no photography of elders without permission"
+  },
+  {
+    id: 8,
     type: "hotel",
-    name: "Budget Inn",
-    distance: "3.2 km",
-    rating: 3.5,
+    name: "Ziro Bamboo Cottage",
+    distance: "5.1 km",
+    rating: 4.2,
+    dtidCheckin: true,
+    safe: true,
+    restricted: true,
+    permits: "ILP Required",
+    tribalArea: true,
+    coordinates: { latitude: 27.5460, longitude: 93.8354 },
+    description: "Sustainable bamboo architecture in Apatani valley",
+    speciality: "UNESCO World Heritage site stay"
+  },
+  {
+    id: 9,
+    type: "food",
+    name: "Manipuri Thali House",
+    distance: "1.8 km",
+    cuisine: "Manipuri, Meitei",
+    safe: true,
+    restricted: false,
+    permits: "None",
+    tribalArea: true,
+    coordinates: { latitude: 24.8170, longitude: 93.9368 },
+    description: "Traditional Meitei cuisine in cultural setting",
+    speciality: "Eromba, Chamthong, Nganu"
+  },
+  {
+    id: 10,
+    type: "adventure",
+    name: "Dzukou Valley Trek",
+    distance: "25.4 km",
+    rating: 4.8,
+    difficulty: "Challenging",
+    duration: "2-3 days",
+    safe: true,
+    restricted: false,
+    permits: "Forest Permission",
+    tribalArea: false,
+    coordinates: { latitude: 25.5598, longitude: 94.1219 },
+    description: "Valley of flowers between Nagaland-Manipur border",
+    bestTime: "Jun-Sep for flowers"
+  },
+  {
+    id: 11,
+    type: "cultural",
+    name: "Unakoti Archaeological Site",
+    distance: "78.5 km",
+    rating: 4.1,
+    entryFee: "₹25",
+    hours: "8am-5pm",
+    safe: true,
+    restricted: true,
+    permits: "ASI Permission",
+    tribalArea: true,
+    coordinates: { latitude: 23.9408, longitude: 91.9800 },
+    description: "Ancient rock carvings and Tripuri sacred sites",
+    historicalNote: "8th-9th century Shaivite sculptures"
+  },
+  {
+    id: 12,
+    type: "hotel",
+    name: "Shillong Heritage Homestay",
+    distance: "2.7 km",
+    rating: 4.0,
     dtidCheckin: false,
     safe: false,
-    restricted: true,
-    coordinates: { latitude: 28.6200, longitude: 77.2000 },
-  },
+    restricted: false,
+    permits: "Local Registration",
+    tribalArea: true,
+    coordinates: { latitude: 25.5788, longitude: 91.8933 },
+    description: "Traditional Khasi family homestay experience",
+    warningNote: "Limited safety measures - travel in groups"
+  }
 ];
 
-const CATEGORIES = ["All", "Attractions", "Hotels", "Food", "Adventure"];
+const CATEGORIES = ["All", "Attractions", "Cultural Sites", "Hotels", "Food", "Adventure"];
 
 export default function ExploreTab() {
   const [search, setSearch] = useState("");
@@ -97,15 +224,17 @@ export default function ExploreTab() {
   const scaleAnim = useState(new Animated.Value(0.9))[0];
 
   // Filtered places
-  const filtered = SAMPLE_PLACES.filter((p) => {
+  const filtered = NORTHEAST_PLACES.filter((p) => {
     if (safeOnly && !p.safe) return false;
     if (category !== "All") {
       if (category === "Attractions" && p.type !== "attraction") return false;
+      if (category === "Cultural Sites" && p.type !== "cultural") return false;
       if (category === "Hotels" && p.type !== "hotel") return false;
       if (category === "Food" && p.type !== "food") return false;
       if (category === "Adventure" && p.type !== "adventure") return false;
     }
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && 
+        !p.description.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -181,7 +310,7 @@ export default function ExploreTab() {
             <Ionicons name="search" size={22} color="#6366F1" style={{ marginRight: 12 }} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Discover amazing places near you..."
+              placeholder="Explore Northeast India's treasures..."
               placeholderTextColor="#9CA3AF"
               value={search}
               onChangeText={setSearch}
@@ -308,8 +437,10 @@ export default function ExploreTab() {
                       <Ionicons
                         name={
                           item.type === 'attraction' ? 'camera' :
+                          item.type === 'cultural' ? 'library' :
                           item.type === 'hotel' ? 'bed' :
-                          item.type === 'food' ? 'restaurant' : 'help-circle'
+                          item.type === 'food' ? 'restaurant' :
+                          item.type === 'adventure' ? 'mountain' : 'help-circle'
                         }
                         size={24}
                         color={item.safe ? '#10B981' : item.restricted ? '#EF4444' : '#F59E0B'}
@@ -319,11 +450,28 @@ export default function ExploreTab() {
                     <View style={styles.cardContent}>
                       <View style={styles.cardTitleRow}>
                         <Text style={styles.cardTitle}>{item.name}</Text>
+                        {item.tribalArea && (
+                          <View style={styles.tribalBadge}>
+                            <Ionicons name="people" size={10} color="#F59E0B" />
+                            <Text style={styles.tribalBadgeText}>Tribal</Text>
+                          </View>
+                        )}
                       </View>
                       
                       <Text style={styles.cardDistance}>
                         <Ionicons name="location" size={14} color="#9CA3AF" /> {item.distance} away
                       </Text>
+                      
+                      <Text style={styles.cardDescription} numberOfLines={2}>
+                        {item.description}
+                      </Text>
+                      
+                      {item.permits && item.permits !== "None" && (
+                        <View style={styles.permitInfo}>
+                          <Ionicons name="document-text" size={12} color="#DC2626" />
+                          <Text style={styles.permitText}>Permits: {item.permits}</Text>
+                        </View>
+                      )}
                       
                       <View style={styles.cardDetailsRow}>
                         {item.type === 'attraction' && (
@@ -336,10 +484,30 @@ export default function ExploreTab() {
                               <Ionicons name="cash" size={12} color="#10B981" />
                               <Text style={styles.detailText}>{item.entryFee}</Text>
                             </View>
+                            {item.bestTime && (
+                              <View style={styles.detailChip}>
+                                <Ionicons name="calendar" size={12} color="#6366F1" />
+                                <Text style={styles.detailText}>{item.bestTime}</Text>
+                              </View>
+                            )}
+                          </>
+                        )}
+                        {item.type === 'cultural' && (
+                          <>
+                            <View style={styles.detailChip}>
+                              <Ionicons name="star" size={12} color="#F59E0B" />
+                              <Text style={styles.detailText}>{item.rating}</Text>
+                            </View>
                             <View style={styles.detailChip}>
                               <Ionicons name="time" size={12} color="#6366F1" />
                               <Text style={styles.detailText}>{item.hours}</Text>
                             </View>
+                            {item.culturalNote && (
+                              <View style={[styles.detailChip, { backgroundColor: '#FEF3C7' }]}>
+                                <Ionicons name="information-circle" size={12} color="#F59E0B" />
+                                <Text style={[styles.detailText, { color: '#F59E0B' }]}>Cultural</Text>
+                              </View>
+                            )}
                           </>
                         )}
                         {item.type === 'hotel' && (
@@ -354,13 +522,45 @@ export default function ExploreTab() {
                                 <Text style={[styles.detailText, { color: '#10B981' }]}>DTID</Text>
                               </View>
                             )}
+                            {item.altitude && (
+                              <View style={styles.detailChip}>
+                                <Ionicons name="triangle" size={12} color="#6366F1" />
+                                <Text style={styles.detailText}>{item.altitude}</Text>
+                              </View>
+                            )}
                           </>
                         )}
                         {item.type === 'food' && (
-                          <View style={styles.detailChip}>
-                            <Ionicons name="leaf" size={12} color="#10B981" />
-                            <Text style={styles.detailText}>{item.cuisine}</Text>
-                          </View>
+                          <>
+                            <View style={styles.detailChip}>
+                              <Ionicons name="restaurant" size={12} color="#10B981" />
+                              <Text style={styles.detailText}>{item.cuisine}</Text>
+                            </View>
+                            {item.speciality && (
+                              <View style={[styles.detailChip, { backgroundColor: '#F3E8FF' }]}>
+                                <Ionicons name="star" size={12} color="#9333EA" />
+                                <Text style={[styles.detailText, { color: '#9333EA' }]}>Special</Text>
+                              </View>
+                            )}
+                          </>
+                        )}
+                        {item.type === 'adventure' && (
+                          <>
+                            <View style={styles.detailChip}>
+                              <Ionicons name="star" size={12} color="#F59E0B" />
+                              <Text style={styles.detailText}>{item.rating}</Text>
+                            </View>
+                            <View style={[styles.detailChip, { backgroundColor: item.difficulty === 'Challenging' ? '#FEE2E2' : '#FEF3C7' }]}>
+                              <Ionicons name="fitness" size={12} color={item.difficulty === 'Challenging' ? '#DC2626' : '#F59E0B'} />
+                              <Text style={[styles.detailText, { color: item.difficulty === 'Challenging' ? '#DC2626' : '#F59E0B' }]}>{item.difficulty}</Text>
+                            </View>
+                            {item.duration && (
+                              <View style={styles.detailChip}>
+                                <Ionicons name="time" size={12} color="#6366F1" />
+                                <Text style={styles.detailText}>{item.duration}</Text>
+                              </View>
+                            )}
+                          </>
                         )}
                       </View>
                     </View>
@@ -399,19 +599,53 @@ export default function ExploreTab() {
         </View>
       </ScrollView>
 
-        {/* Warning Modal */}
+        {/* Enhanced Warning Modal */}
         <Modal visible={!!warning} transparent animationType="slide" onRequestClose={() => setWarning(null)}>
           <View style={styles.modalBackdrop}>
             <View style={styles.warningModal}>
-              <Ionicons name="warning" size={40} color="#F59E0B" style={{ marginBottom: 10 }} />
-              <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#F59E0B', marginBottom: 8 }}>This area may be unsafe.</Text>
-              <Text style={{ color: '#333', marginBottom: 18 }}>Proceed?</Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#F59E0B' }]} onPress={() => setWarning(null)}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>Cancel</Text>
+              <Ionicons 
+                name={warning?.restricted ? "shield-outline" : "alert-circle-outline"} 
+                size={40} 
+                color={warning?.restricted ? "#DC2626" : "#F59E0B"} 
+                style={{ marginBottom: 12 }} 
+              />
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: warning?.restricted ? "#DC2626" : "#F59E0B", marginBottom: 8, textAlign: 'center' }}>
+                {warning?.restricted ? "Restricted Area Alert" : "Safety Advisory"}
+              </Text>
+              <Text style={{ color: '#4B5563', marginBottom: 12, textAlign: 'center', lineHeight: 20 }}>
+                {warning?.description || "This location requires special attention."}
+              </Text>
+              {warning?.permits && warning.permits !== "None" && (
+                <View style={{ backgroundColor: '#FEE2E2', padding: 12, borderRadius: 8, marginBottom: 16, width: '100%' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#DC2626', textAlign: 'center' }}>
+                    Required: {warning.permits}
+                  </Text>
+                </View>
+              )}
+              {warning?.culturalNote && (
+                <View style={{ backgroundColor: '#FEF3C7', padding: 12, borderRadius: 8, marginBottom: 16, width: '100%' }}>
+                  <Text style={{ fontSize: 12, color: '#92400E', textAlign: 'center' }}>
+                    Cultural Note: {warning.culturalNote}
+                  </Text>
+                </View>
+              )}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', gap: 12 }}>
+                <TouchableOpacity 
+                  style={[styles.modalBtn, { backgroundColor: '#F3F4F6' }]} 
+                  onPress={() => setWarning(null)}
+                >
+                  <Text style={{ color: '#374151', fontWeight: 'bold' }}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#4F46E5' }]} onPress={() => { setWarning(null); alert('Proceeding to restricted area!'); }}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>Proceed</Text>
+                <TouchableOpacity 
+                  style={[styles.modalBtn, { backgroundColor: warning?.restricted ? '#DC2626' : '#4F46E5' }]} 
+                  onPress={() => { 
+                    setWarning(null); 
+                    alert(`Proceeding to ${warning?.name}. Please ensure you have proper permits and follow cultural guidelines.`); 
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+                    {warning?.restricted ? "I Have Permits" : "Proceed Safely"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -649,6 +883,44 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: '#C7D2FE'
+  },
+  
+  // Northeast India specific styles
+  tribalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    gap: 3,
+  },
+  tribalBadgeText: {
+    fontSize: 10,
+    color: '#F59E0B',
+    fontWeight: '600',
+  },
+  cardDescription: {
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  permitInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+    gap: 4,
+  },
+  permitText: {
+    fontSize: 11,
+    color: '#DC2626',
+    fontWeight: '600',
+    flex: 1,
   },
   
   // Modal Styles

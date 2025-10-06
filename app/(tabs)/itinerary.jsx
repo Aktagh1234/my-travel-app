@@ -1,102 +1,213 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  TextInput,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Predefined itineraries
+// Predefined itineraries for Northeast India
 const PREDEFINED_ITINERARIES = [
   {
-    id: 'assam-explorer',
-    name: 'Assam Explorer (9 Days)',
-    description: 'Discover the beauty of Northeast India',
+    id: 'assam-meghalaya-circuit',
+    name: 'Assam-Meghalaya Cultural Circuit (10 Days)',
+    description: 'Explore Khasi & Garo tribal heritage with proper permits',
+    permitRequired: true,
+    specialNotes: 'ILP required for some areas. Respect tribal customs.',
     destinations: [
       {
         destination_lat: 26.1445,
         destination_lng: 91.7362,
-        planned_arrival: "2025-10-02",
-        destination_name: "Guwahati",
-        planned_departure: "2025-10-11"
+        planned_arrival: "2025-11-01",
+        destination_name: "Guwahati (Gateway & Permits)",
+        planned_departure: "2025-11-03",
+        tribal_area: false,
+        permits_needed: "None",
+        cultural_notes: "Kamakhya Temple, Brahmaputra River Cruise"
       },
       {
         destination_lat: 26.5745,
         destination_lng: 93.1717,
-        planned_arrival: "2025-10-11",
-        destination_name: "Kaziranga National Orchid and Biodiversity Park", 
-        planned_departure: "2025-10-12"
+        planned_arrival: "2025-11-03",
+        destination_name: "Kaziranga National Park",
+        planned_departure: "2025-11-05",
+        tribal_area: false,
+        permits_needed: "Forest Department Permit",
+        cultural_notes: "One-horned rhino habitat, Mishing tribe villages nearby"
+      },
+      {
+        destination_lat: 25.5788,
+        destination_lng: 91.8933,
+        planned_arrival: "2025-11-05",
+        destination_name: "Shillong (Khasi Hills)",
+        planned_departure: "2025-11-07",
+        tribal_area: true,
+        permits_needed: "ILP for restricted areas",
+        cultural_notes: "Khasi tribal culture, traditional markets, respect matrilineal society"
+      },
+      {
+        destination_lat: 25.2644,
+        destination_lng: 91.7898,
+        planned_arrival: "2025-11-07",
+        destination_name: "Cherrapunji (Sohra)",
+        planned_departure: "2025-11-09",
+        tribal_area: true,
+        permits_needed: "Local guide mandatory",
+        cultural_notes: "Khasi sacred groves, living root bridges, traditional villages"
       },
       {
         destination_lat: 27.0173,
         destination_lng: 94.2152,
-        planned_arrival: "2025-10-12",
-        destination_name: "Majuli",
-        planned_departure: "2025-10-13"
+        planned_arrival: "2025-11-09",
+        destination_name: "Majuli Island (Mishing Tribe)",
+        planned_departure: "2025-11-11",
+        tribal_area: true,
+        permits_needed: "District administration permission",
+        cultural_notes: "Vaishnavite monasteries, Mishing & Deori tribal villages"
       }
     ]
   },
   {
-    id: 'kerala-backwaters',
-    name: 'Kerala Backwaters (7 Days)',
-    description: 'Experience God\'s Own Country',
+    id: 'arunachal-pradesh-adventure',
+    name: 'Arunachal Pradesh Tribal Discovery (12 Days)',
+    description: 'Experience Monpa, Apatani & Nyishi cultures',
+    permitRequired: true,
+    specialNotes: 'Mandatory ILP, local guides, and restricted area permits required',
     destinations: [
       {
-        destination_lat: 9.9312,
-        destination_lng: 76.2673,
-        planned_arrival: "2025-11-01",
-        destination_name: "Kochi",
-        planned_departure: "2025-11-03"
-      },
-      {
-        destination_lat: 9.4981,
-        destination_lng: 76.3388,
-        planned_arrival: "2025-11-03",
-        destination_name: "Alleppey",
-        planned_departure: "2025-11-05"
-      },
-      {
-        destination_lat: 8.8932,
-        destination_lng: 76.6141,
-        planned_arrival: "2025-11-05",
-        destination_name: "Thekkady",
-        planned_departure: "2025-11-07"
-      }
-    ]
-  },
-  {
-    id: 'rajasthan-royal',
-    name: 'Rajasthan Royal Tour (10 Days)',
-    description: 'Explore the land of kings and palaces',
-    destinations: [
-      {
-        destination_lat: 26.9124,
-        destination_lng: 75.7873,
+        destination_lat: 27.0844,
+        destination_lng: 93.6053,
         planned_arrival: "2025-12-01",
-        destination_name: "Jaipur",
-        planned_departure: "2025-12-04"
+        destination_name: "Itanagar (Entry Point)",
+        planned_departure: "2025-12-03",
+        tribal_area: true,
+        permits_needed: "ILP + RAP",
+        cultural_notes: "Nyishi tribe capital, Ita Fort, tribal museum"
       },
       {
-        destination_lat: 24.5854,
-        destination_lng: 73.7125,
+        destination_lat: 27.3389,
+        destination_lng: 93.6056,
+        planned_arrival: "2025-12-03",
+        destination_name: "Ziro Valley (Apatani Tribe)",
+        planned_departure: "2025-12-06",
+        tribal_area: true,
+        permits_needed: "Special Area Permit + Local guide",
+        cultural_notes: "UNESCO site, Apatani sustainable farming, facial tattoos tradition"
+      },
+      {
+        destination_lat: 27.2046,
+        destination_lng: 91.6915,
+        planned_arrival: "2025-12-06",
+        destination_name: "Tawang (Monpa Tribe)",
+        planned_departure: "2025-12-09",
+        tribal_area: true,
+        permits_needed: "Military restricted area permit",
+        cultural_notes: "Monpa Buddhist culture, Tawang Monastery, border sensitivity"
+      },
+      {
+        destination_lat: 28.2180,
+        destination_lng: 94.7278,
+        planned_arrival: "2025-12-09",
+        destination_name: "Bomdila (Monpa Culture)",
+        planned_departure: "2025-12-12",
+        tribal_area: true,
+        permits_needed: "District collector permit",
+        cultural_notes: "Monpa handloom, apple orchards, Buddhist gompa"
+      }
+    ]
+  },
+  {
+    id: 'nagaland-mizoram-heritage',
+    name: 'Nagaland-Mizoram Tribal Heritage (8 Days)',
+    description: 'Explore Naga & Mizo warrior cultures respectfully',
+    permitRequired: true,
+    specialNotes: 'Hornbill Festival season recommended. Photography permissions needed.',
+    destinations: [
+      {
+        destination_lat: 25.6751,
+        destination_lng: 94.1086,
+        planned_arrival: "2025-12-01",
+        destination_name: "Kohima (Naga Heritage)",
+        planned_departure: "2025-12-04",
+        tribal_area: true,
+        permits_needed: "ILP + Photography permit",
+        cultural_notes: "Angami Naga tribe, WWII cemetery, traditional morung (bachelor huts)"
+      },
+      {
+        destination_lat: 26.1584,
+        destination_lng: 94.5624,
         planned_arrival: "2025-12-04",
-        destination_name: "Udaipur",
-        planned_departure: "2025-12-07"
+        destination_name: "Mon District (Konyak Tribe)",
+        planned_departure: "2025-12-06",
+        tribal_area: true,
+        permits_needed: "Restricted area permit + Tribal elder permission",
+        cultural_notes: "Last headhunter tribes, traditional tattoos, respect elder protocols"
       },
       {
-        destination_lat: 26.2389,
-        destination_lng: 73.0243,
-        planned_arrival: "2025-12-07",
-        destination_name: "Jodhpur",
-        planned_departure: "2025-12-10"
+        destination_lat: 23.7271,
+        destination_lng: 92.7176,
+        planned_arrival: "2025-12-06",
+        destination_name: "Aizawl (Mizo Culture)",
+        planned_departure: "2025-12-08",
+        tribal_area: true,
+        permits_needed: "ILP for Mizoram",
+        cultural_notes: "Mizo traditional bamboo dance, Presbyterian influence, tribal councils"
+      }
+    ]
+  },
+  {
+    id: 'manipur-tripura-cultural',
+    name: 'Manipur-Tripura Cultural Circuit (9 Days)',
+    description: 'Discover Meitei, Manipuri & Tripuri traditions',
+    permitRequired: true,
+    specialNotes: 'Dance festivals, polo origins, and tribal textiles focus',
+    destinations: [
+      {
+        destination_lat: 24.8170,
+        destination_lng: 93.9368,
+        planned_arrival: "2025-01-15",
+        destination_name: "Imphal (Meitei Culture)",
+        planned_departure: "2025-01-18",
+        tribal_area: true,
+        permits_needed: "ILP + Disturbed area guidelines",
+        cultural_notes: "Manipuri dance birthplace, Kangla Fort, Ima Keithel (women's market)"
+      },
+      {
+        destination_lat: 24.5698,
+        destination_lng: 93.9528,
+        planned_arrival: "2025-01-18",
+        destination_name: "Loktak Lake (Fishing Communities)",
+        planned_departure: "2025-01-20",
+        tribal_area: false,
+        permits_needed: "Eco-tourism permit",
+        cultural_notes: "Floating phumdis, traditional fishing, conservation awareness needed"
+      },
+      {
+        destination_lat: 23.8315,
+        destination_lng: 91.2868,
+        planned_arrival: "2025-01-20",
+        destination_name: "Agartala (Tripuri Heritage)",
+        planned_departure: "2025-01-22",
+        tribal_area: true,
+        permits_needed: "Tribal area permit for villages",
+        cultural_notes: "Tripuri tribal kingdom, Ujjayanta Palace, traditional weaving"
+      },
+      {
+        destination_lat: 23.9408,
+        destination_lng: 91.9800,
+        planned_arrival: "2025-01-22",
+        destination_name: "Unakoti (Sacred Sculptures)",
+        planned_departure: "2025-01-24",
+        tribal_area: true,
+        permits_needed: "Archaeological survey permission",
+        cultural_notes: "Ancient rock carvings, tribal spiritual sites, local guide essential"
       }
     ]
   }
@@ -220,7 +331,16 @@ export default function Itinerary() {
     <View key={index} style={styles.destinationCard}>
       <View style={styles.destinationHeader}>
         <View style={styles.destinationInfo}>
-          <Text style={styles.destinationName}>{destination.destination_name}</Text>
+          <View style={styles.destinationTitleRow}>
+            <Text style={styles.destinationName}>{destination.destination_name}</Text>
+            {destination.tribal_area && (
+              <View style={styles.tribalBadge}>
+                <Ionicons name="people-outline" size={12} color="#F59E0B" />
+                <Text style={styles.tribalBadgeText}>Tribal Area</Text>
+              </View>
+            )}
+          </View>
+          
           <View style={styles.datesContainer}>
             <View style={styles.dateItem}>
               <Ionicons name="calendar-outline" size={14} color="#666" />
@@ -235,7 +355,28 @@ export default function Itinerary() {
               </Text>
             </View>
           </View>
+
+          {/* Permit Information */}
+          {destination.permits_needed && (
+            <View style={styles.permitInfo}>
+              <View style={styles.permitItem}>
+                <Ionicons name="document-text-outline" size={14} color="#DC2626" />
+                <Text style={styles.permitText}>Permits: {destination.permits_needed}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Cultural Notes */}
+          {destination.cultural_notes && (
+            <View style={styles.culturalInfo}>
+              <View style={styles.culturalItem}>
+                <Ionicons name="information-circle-outline" size={14} color="#059669" />
+                <Text style={styles.culturalText}>{destination.cultural_notes}</Text>
+              </View>
+            </View>
+          )}
         </View>
+        
         {isUserItinerary && (
           <View style={styles.cardActions}>
             <TouchableOpacity 
@@ -405,8 +546,25 @@ export default function Itinerary() {
                   style={styles.predefinedCard}
                   onPress={() => selectPredefinedItinerary(itinerary)}
                 >
-                  <Text style={styles.predefinedName}>{itinerary.name}</Text>
+                  <View style={styles.predefinedHeader}>
+                    <Text style={styles.predefinedName}>{itinerary.name}</Text>
+                    {itinerary.permitRequired && (
+                      <View style={styles.permitRequiredBadge}>
+                        <Ionicons name="shield-checkmark-outline" size={12} color="#DC2626" />
+                        <Text style={styles.permitBadgeText}>Permits Required</Text>
+                      </View>
+                    )}
+                  </View>
+                  
                   <Text style={styles.predefinedDescription}>{itinerary.description}</Text>
+                  
+                  {itinerary.specialNotes && (
+                    <View style={styles.specialNotesContainer}>
+                      <Ionicons name="alert-circle-outline" size={14} color="#F59E0B" />
+                      <Text style={styles.specialNotesText}>{itinerary.specialNotes}</Text>
+                    </View>
+                  )}
+                  
                   <Text style={styles.predefinedDestinations}>
                     {itinerary.destinations.length} destinations • {
                       Math.ceil((new Date(itinerary.destinations[itinerary.destinations.length - 1].planned_departure) - 
@@ -627,11 +785,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
+  predefinedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
   predefinedName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1e293b',
-    marginBottom: 4,
+    flex: 1,
   },
   predefinedDescription: {
     fontSize: 14,
@@ -642,5 +806,83 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94a3b8',
     fontWeight: '500',
+  },
+  permitRequiredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  permitBadgeText: {
+    fontSize: 10,
+    color: '#DC2626',
+    fontWeight: '600',
+  },
+  specialNotesContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 8,
+    gap: 6,
+  },
+  specialNotesText: {
+    fontSize: 12,
+    color: '#92400E',
+    flex: 1,
+    lineHeight: 16,
+  },
+  destinationTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  tribalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 3,
+  },
+  tribalBadgeText: {
+    fontSize: 9,
+    color: '#F59E0B',
+    fontWeight: '600',
+  },
+  permitInfo: {
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  permitItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+  },
+  permitText: {
+    fontSize: 12,
+    color: '#DC2626',
+    fontWeight: '500',
+    flex: 1,
+  },
+  culturalInfo: {
+    marginTop: 4,
+  },
+  culturalItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+  },
+  culturalText: {
+    fontSize: 12,
+    color: '#059669',
+    flex: 1,
+    lineHeight: 16,
   },
 });

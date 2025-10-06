@@ -17,9 +17,10 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [safetyScore, setSafetyScore] = useState(85);
   const [alerts, setAlerts] = useState([
-    { id: 1, type: 'warning', title: 'Restricted Zone Entered', time: '10:15 AM', status: 'Active' },
-    { id: 2, type: 'sos', title: 'SOS Alert Triggered', time: 'Yesterday 6:40 PM', status: 'Resolved' },
-    { id: 3, type: 'info', title: 'Checkpoint Cleared', time: 'Yesterday 2:10 PM', status: 'Resolved' },
+    { id: 1, type: 'critical', title: 'ILP Verification Required - Tawang', time: '2 hours ago', status: 'Active', priority: 'high' },
+    { id: 2, type: 'weather', title: 'Heavy Rainfall Alert - Cherrapunji', time: '3 hours ago', status: 'Active', priority: 'medium' },
+    { id: 3, type: 'cultural', title: 'Hornbill Festival - Crowd Advisory', time: '5 hours ago', status: 'Active', priority: 'low' },
+    { id: 4, type: 'info', title: 'Majuli Ferry Service Restored', time: 'Yesterday 8:20 PM', status: 'Resolved', priority: 'low' },
   ]);
   const router = useRouter();
   const [dtid, setDtid] = useState(null);
@@ -211,23 +212,131 @@ export default function Dashboard() {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Recent Alerts</Text>
-        {alerts.slice(0,2).map((alert) => (
-          <View key={alert.id} style={[styles.alertRow, { borderLeftColor: alert.type === 'sos' ? '#EF4444' : alert.type === 'warning' ? '#F59E0B' : '#10B981' } ]}>
-            <Text style={[styles.alertIcon, { color: alert.type === 'sos' ? '#EF4444' : alert.type === 'warning' ? '#F59E0B' : '#10B981' } ]}>
-              {alert.type === 'sos' ? '🚨' : alert.type === 'warning' ? '⚠️' : '✅'}
-            </Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.alertTitle}>{alert.title}</Text>
-              <Text style={styles.alertTime}>{alert.time}</Text>
+        {alerts.slice(0,2).map((alert) => {
+          const getAlertStyle = (type) => {
+            const styles = {
+              critical: { color: '#DC2626', icon: '🚨' },
+              weather: { color: '#2563EB', icon: '🌧️' },
+              cultural: { color: '#9333EA', icon: '🎭' },
+              info: { color: '#059669', icon: '✅' },
+              default: { color: '#6B7280', icon: 'ℹ️' }
+            };
+            return styles[type] || styles.default;
+          };
+          
+          const alertStyle = getAlertStyle(alert.type);
+          
+          return (
+            <View key={alert.id} style={[styles.alertRow, { borderLeftColor: alertStyle.color }]}>
+              <Text style={[styles.alertIcon, { color: alertStyle.color }]}>
+                {alertStyle.icon}
+              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.alertTitle}>{alert.title}</Text>
+                <Text style={styles.alertTime}>{alert.time}</Text>
+              </View>
+              <View style={[styles.statusChip, { 
+                backgroundColor: alert.status === 'Active' ? (alert.priority === 'high' ? '#DC2626' : '#F59E0B') : '#10B981' 
+              }]}>
+                <Text style={styles.statusChipText}>{alert.status}</Text>
+              </View>
             </View>
-            <View style={[styles.statusChip, { backgroundColor: alert.status === 'Active' ? '#F59E0B' : '#10B981' } ]}>
-              <Text style={styles.statusChipText}>{alert.status}</Text>
-            </View>
-          </View>
-        ))}
+          );
+        })}
         <TouchableOpacity style={styles.viewAllBtn} onPress={() => router.push('/(tabs)/alerts')}>
           <Text style={styles.viewAllBtnText}>View All Alerts</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Educational Section about Northeast India */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Northeast India Guide</Text>
+        <View style={styles.educationalContent}>
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>🏛️</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Cultural Heritage</Text>
+              <Text style={styles.educationalDescription}>
+                Home to 200+ tribes with unique traditions, languages, and festivals
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>🎭</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Major Festivals</Text>
+              <Text style={styles.educationalDescription}>
+                Hornbill (Dec), Bihu (Apr), Cheiraoba (Apr), Chapchar Kut (Mar)
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>📋</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Travel Documents</Text>
+              <Text style={styles.educationalDescription}>
+                ILP required for Arunachal, Nagaland, Mizoram. RAP for border areas
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>🌿</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Biodiversity</Text>
+              <Text style={styles.educationalDescription}>
+                Kaziranga rhinos, living root bridges, sacred groves, unique ecosystems
+              </Text>
+            </View>
+          </View>
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.viewAllBtn, { backgroundColor: '#059669', marginTop: 12 }]} 
+          onPress={() => router.push('/(tabs)/chatbot')}
+        >
+          <Text style={styles.viewAllBtnText}>Ask AI Assistant</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Quick Facts Section */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Did You Know?</Text>
+        <View style={styles.factsContainer}>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>8</Text>
+            <Text style={styles.factLabel}>States</Text>
+          </View>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>200+</Text>
+            <Text style={styles.factLabel}>Tribes</Text>
+          </View>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>220</Text>
+            <Text style={styles.factLabel}>Languages</Text>
+          </View>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>3</Text>
+            <Text style={styles.factLabel}>Seasons</Text>
+          </View>
+        </View>
+        
+        <View style={styles.tipContainer}>
+          <Text style={styles.tipIcon}>💡</Text>
+          <Text style={styles.tipText}>
+            <Text style={styles.tipBold}>Best Time to Visit:</Text> October to March for pleasant weather and clear mountain views
+          </Text>
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -339,6 +448,87 @@ const styles = StyleSheet.create({
     color: '#fff', 
     fontWeight: 'bold',
     fontSize: 14
+  },
+  // Educational Content Styles
+  educationalContent: {
+    marginTop: 12,
+  },
+  educationalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  educationalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  educationalEmoji: {
+    fontSize: 18,
+  },
+  educationalText: {
+    flex: 1,
+  },
+  educationalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  educationalDescription: {
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 18,
+  },
+  // Quick Facts Styles
+  factsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  factItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  factNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  factLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  tipContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0FDF4',
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+    alignItems: 'flex-start',
+  },
+  tipIcon: {
+    fontSize: 16,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#065F46',
+    lineHeight: 18,
+  },
+  tipBold: {
+    fontWeight: '600',
   },
 });
 

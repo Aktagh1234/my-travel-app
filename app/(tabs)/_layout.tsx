@@ -12,11 +12,19 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: "#1e90ff",
         tabBarInactiveTintColor: "#999",
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
+        },
         tabBarStyle: {
           backgroundColor: "#fff",
-          height: 50 + insets.bottom,
-          paddingBottom: insets.bottom,
-          paddingTop: 0,
+          height: 65 + insets.bottom,
+          paddingBottom: insets.bottom + 5,
+          paddingTop: 5,
           borderTopWidth: 0,
           position: 'absolute',
           bottom: 0,
@@ -27,14 +35,18 @@ export default function TabsLayout() {
             ? { elevation: 12 }
             : { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: -2 } }),
         },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+          flex: 1,
+        },
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
+          title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="home-outline" size={Math.min(size, 22)} color={color} />
           ),
         }}
       />
@@ -44,7 +56,17 @@ export default function TabsLayout() {
         options={{
           title: "Alerts",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="alert-circle-outline" size={size} color={color} />
+            <Ionicons name="alert-circle-outline" size={Math.min(size, 22)} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="chatbot"
+        options={{
+          title: "Chat",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble-ellipses-outline" size={Math.min(size, 22)} color={color} />
           ),
         }}
       />
@@ -52,9 +74,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="itinerary"
         options={{
-          title: "Itinerary",
+          title: "Plans",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={Math.min(size, 22)} color={color} />
           ),
         }}
       />
@@ -64,7 +86,7 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <Ionicons name="person-outline" size={Math.min(size, 22)} color={color} />
           ),
         }}
       />
@@ -74,7 +96,7 @@ export default function TabsLayout() {
         options={{
           title: "Explore",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map-outline" size={size} color={color} />
+            <Ionicons name="map-outline" size={Math.min(size, 22)} color={color} />
           ),
         }}
       />
