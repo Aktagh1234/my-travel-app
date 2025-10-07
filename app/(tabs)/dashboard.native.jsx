@@ -9,10 +9,47 @@ import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 
+// Emergency services data for Northeast India
+const EMERGENCY_SERVICES = {
+  assam: {
+    hospitals: [
+      { name: 'GNRC Hospital Guwahati', address: 'Dispur, Guwahati, Assam', phone: '+91-361-2151632', distance: '2.3 km' },
+      { name: 'Down Town Hospital', address: 'Guwahati, Assam', phone: '+91-361-2332236', distance: '3.7 km' },
+      { name: 'Nemcare Hospital', address: 'Bhangagarh, Guwahati', phone: '+91-361-2738000', distance: '4.2 km' }
+    ],
+    police: [
+      { name: 'Dispur Police Station', address: 'Dispur, Guwahati, Assam', phone: '100', distance: '1.8 km' },
+      { name: 'Tourist Police Guwahati', address: 'Zoo Road, Guwahati, Assam', phone: '+91-361-2540779', distance: '2.5 km' },
+      { name: 'Panbazar Police Station', address: 'Panbazar, Guwahati', phone: '+91-361-2543214', distance: '3.1 km' }
+    ]
+  },
+  arunachal: {
+    hospitals: [
+      { name: 'Tomo Riba Institute of Health', address: 'Naharlagun, Arunachal Pradesh', phone: '+91-360-2244307', distance: '1.5 km' },
+      { name: 'District Hospital Itanagar', address: 'Itanagar, Arunachal Pradesh', phone: '+91-360-2212980', distance: '2.8 km' }
+    ],
+    police: [
+      { name: 'Capital Police Station', address: 'Itanagar, Arunachal Pradesh', phone: '100', distance: '1.2 km' },
+      { name: 'Tourist Police Itanagar', address: 'Naharlagun, Arunachal Pradesh', phone: '+91-360-2244221', distance: '2.0 km' }
+    ]
+  },
+  meghalaya: {
+    hospitals: [
+      { name: 'NEIGRIHMS', address: 'Mawdiangdiang, Shillong', phone: '+91-364-2538004', distance: '3.2 km' },
+      { name: 'Civil Hospital Shillong', address: 'Shillong, Meghalaya', phone: '+91-364-2224089', distance: '2.1 km' }
+    ],
+    police: [
+      { name: 'Sadar Police Station', address: 'Police Bazar, Shillong', phone: '100', distance: '1.7 km' },
+      { name: 'Tourist Police Shillong', address: 'Shillong, Meghalaya', phone: '+91-364-2226220', distance: '2.3 km' }
+    ]
+  }
+};
+
 export default function Dashboard() {
   const [location, setLocation] = useState(null);
   // For local location history
   const [locationHistory, setLocationHistory] = useState([]);
+  const [currentState, setCurrentState] = useState('assam'); // Default to Assam
   const [permissionStatus, setPermissionStatus] = useState("undetermined");
   const [refreshing, setRefreshing] = useState(false);
   const [safetyScore, setSafetyScore] = useState(85);
@@ -387,6 +424,131 @@ export default function Dashboard() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Emergency Services Section */}
+      <View style={styles.card}>
+        <View style={styles.emergencyHeader}>
+          <Text style={styles.sectionTitle}>Nearby Emergency Services</Text>
+          <View style={styles.stateSelector}>
+            <TouchableOpacity
+              style={[styles.stateSelectorButton, currentState === 'assam' && styles.stateSelectorActive]}
+              onPress={() => setCurrentState('assam')}
+            >
+              <Text style={[styles.stateSelectorText, currentState === 'assam' && styles.stateSelectorTextActive]}>
+                Assam
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.stateSelectorButton, currentState === 'arunachal' && styles.stateSelectorActive]}
+              onPress={() => setCurrentState('arunachal')}
+            >
+              <Text style={[styles.stateSelectorText, currentState === 'arunachal' && styles.stateSelectorTextActive]}>
+                Arunachal
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.stateSelectorButton, currentState === 'meghalaya' && styles.stateSelectorActive]}
+              onPress={() => setCurrentState('meghalaya')}
+            >
+              <Text style={[styles.stateSelectorText, currentState === 'meghalaya' && styles.stateSelectorTextActive]}>
+                Meghalaya
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={styles.emergencyServicesContainer}>
+          {/* Hospitals Section */}
+          <View style={styles.emergencyCategory}>
+            <View style={styles.emergencyCategoryHeader}>
+              <View style={styles.emergencyIconContainer}>
+                <Text style={styles.emergencyIcon}>🏥</Text>
+              </View>
+              <Text style={styles.emergencyCategoryTitle}>Nearby Hospitals</Text>
+            </View>
+            
+            <View style={styles.emergencyList}>
+              {EMERGENCY_SERVICES[currentState]?.hospitals.slice(0, 2).map((hospital, index) => (
+                <View key={index} style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>{hospital.name}</Text>
+                    <Text style={styles.emergencyAddress}>{hospital.address}</Text>
+                    <Text style={styles.emergencyDistance}>{hospital.distance} away</Text>
+                  </View>
+                  <View style={styles.emergencyActions}>
+                    <TouchableOpacity 
+                      style={styles.callButton}
+                      onPress={() => Linking.openURL(`tel:${hospital.phone}`)}
+                    >
+                      <Text style={styles.callButtonText}>📞 Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )) || (
+                <View style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>Loading hospitals...</Text>
+                    <Text style={styles.emergencyAddress}>Fetching nearby medical facilities</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Police Section */}
+          <View style={styles.emergencyCategory}>
+            <View style={styles.emergencyCategoryHeader}>
+              <View style={styles.emergencyIconContainer}>
+                <Text style={styles.emergencyIcon}>👮</Text>
+              </View>
+              <Text style={styles.emergencyCategoryTitle}>Nearby Police</Text>
+            </View>
+            
+            <View style={styles.emergencyList}>
+              {EMERGENCY_SERVICES[currentState]?.police.slice(0, 2).map((police, index) => (
+                <View key={index} style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>{police.name}</Text>
+                    <Text style={styles.emergencyAddress}>{police.address}</Text>
+                    <Text style={styles.emergencyDistance}>{police.distance} away</Text>
+                  </View>
+                  <View style={styles.emergencyActions}>
+                    <TouchableOpacity 
+                      style={styles.callButton}
+                      onPress={() => Linking.openURL(`tel:${police.phone}`)}
+                    >
+                      <Text style={styles.callButtonText}>📞 Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )) || (
+                <View style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>Loading police stations...</Text>
+                    <Text style={styles.emergencyAddress}>Fetching nearby law enforcement</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.emergencyFooter}>
+          <TouchableOpacity 
+            style={styles.emergencyButton}
+            onPress={() => {
+              // In real app, this would show more emergency services
+              Alert.alert(
+                'Emergency Services',
+                'For immediate help:\n• Dial 100 for Police\n• Dial 108 for Medical Emergency\n• Dial 101 for Fire Brigade',
+                [{ text: 'OK' }]
+              );
+            }}
+          >
+            <Text style={styles.emergencyButtonText}>View All Emergency Services</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
     </SafeAreaView>
   );
@@ -528,6 +690,142 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   tipBold: {
+    fontWeight: '600',
+  },
+  // Emergency Services Styles
+  emergencyHeader: {
+    marginBottom: 16,
+  },
+  stateSelector: {
+    flexDirection: 'row',
+    marginTop: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    padding: 4,
+  },
+  stateSelectorButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  stateSelectorActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  stateSelectorText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  stateSelectorTextActive: {
+    color: '#059669',
+    fontWeight: '600',
+  },
+  emergencyServicesContainer: {
+    marginTop: 12,
+  },
+  emergencyCategory: {
+    marginBottom: 20,
+  },
+  emergencyCategoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emergencyIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  emergencyIcon: {
+    fontSize: 16,
+  },
+  emergencyCategoryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  emergencyList: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 8,
+  },
+  emergencyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  emergencyInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  emergencyName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  emergencyAddress: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  emergencyDistance: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '500',
+  },
+  emergencyActions: {
+    alignItems: 'flex-end',
+  },
+  callButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  callButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  emergencyFooter: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  emergencyButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  emergencyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

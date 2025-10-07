@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Speech from 'expo-speech';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
+    Animated,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -16,16 +18,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Supported languages for Northeast India
 const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া' },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
-  { code: 'kha', name: 'Khasi', nativeName: 'Ka Ktien Khasi' },
-  { code: 'grt', name: 'Garo', nativeName: 'A·chik' },
-  { code: 'mni', name: 'Manipuri', nativeName: 'মৈতৈলোন্' },
-  { code: 'lus', name: 'Mizo', nativeName: 'Mizo ṭawng' },
-  { code: 'nag', name: 'Nagamese', nativeName: 'Nagamese' },
-  { code: 'kok', name: 'Kokborok', nativeName: 'Kokborok' },
+  { code: 'en', name: 'English', nativeName: 'English', voiceCode: 'en-US' },
+  { code: 'as', name: 'Assamese', nativeName: 'অসমীয়া', voiceCode: 'hi-IN' },
+  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', voiceCode: 'bn-IN' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', voiceCode: 'hi-IN' },
+  { code: 'kha', name: 'Khasi', nativeName: 'Ka Ktien Khasi', voiceCode: 'en-IN' },
+  { code: 'grt', name: 'Garo', nativeName: 'A·chik', voiceCode: 'en-IN' },
+  { code: 'mni', name: 'Manipuri', nativeName: 'মৈতৈলোন্', voiceCode: 'hi-IN' },
+  { code: 'lus', name: 'Mizo', nativeName: 'Mizo ṭawng', voiceCode: 'en-IN' },
+  { code: 'nag', name: 'Nagamese', nativeName: 'Nagamese', voiceCode: 'en-IN' },
+  { code: 'kok', name: 'Kokborok', nativeName: 'Kokborok', voiceCode: 'en-IN' },
 ];
 
 // Predefined responses for common queries
@@ -57,13 +59,17 @@ const CHATBOT_RESPONSES = {
   }
 };
 
-export default function Chatbot() {
+export default function ChatBot() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const scrollViewRef = useRef();
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const scrollViewRef = useRef(null);
+  const recordingAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Initialize with greeting message
@@ -132,9 +138,10 @@ export default function Chatbot() {
 
     // Simulate bot typing delay
     setTimeout(() => {
+      const responseText = getResponse(inputText);
       const botResponse = {
         id: (Date.now() + 1).toString(),
-        text: getResponse(inputText),
+        text: responseText,
         isBot: true,
         timestamp: new Date().toLocaleTimeString(),
         language: selectedLanguage
@@ -142,7 +149,94 @@ export default function Chatbot() {
       
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
+      
+      // Speak the response if voice is enabled
+      if (voiceEnabled) {
+        speakText(responseText);
+      }
     }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+  };
+
+  // Text-to-Speech function
+  const speakText = async (text) => {
+    try {
+      // Stop any ongoing speech
+      await Speech.stop();
+      
+      setIsSpeaking(true);
+      const currentLang = SUPPORTED_LANGUAGES.find(lang => lang.code === selectedLanguage);
+      const voiceLanguage = currentLang?.voiceCode || 'en-US';
+      
+      await Speech.speak(text, {
+        language: voiceLanguage,
+        pitch: 1.0,
+        rate: 0.9,
+        onDone: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+      });
+    } catch (error) {
+      console.error('Speech error:', error);
+      setIsSpeaking(false);
+    }
+  };
+
+  // Stop speaking function
+  const stopSpeaking = async () => {
+    try {
+      await Speech.stop();
+      setIsSpeaking(false);
+    } catch (error) {
+      console.error('Stop speech error:', error);
+    }
+  };
+
+  // Voice recording simulation (since expo-speech doesn't include STT)
+  const startVoiceRecording = () => {
+    if (isRecording) return;
+    
+    setIsRecording(true);
+    
+    // Start recording animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(recordingAnimation, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(recordingAnimation, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Simulate voice input (in real app, this would use actual speech recognition)
+    setTimeout(() => {
+      setIsRecording(false);
+      recordingAnimation.stopAnimation();
+      recordingAnimation.setValue(0);
+      
+      // Simulate recognized text
+      const voiceInputSamples = [
+        "What are the permits required for Arunachal Pradesh?",
+        "Tell me about Hornbill Festival",
+        "What's the weather like in Northeast India?",
+        "Suggest some tribal areas to visit",
+        "How do I get to Tawang?",
+      ];
+      const randomInput = voiceInputSamples[Math.floor(Math.random() * voiceInputSamples.length)];
+      setInputText(randomInput);
+    }, 3000);
+  };
+
+  // Toggle voice functionality
+  const toggleVoice = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+    }
+    setVoiceEnabled(!voiceEnabled);
   };
 
   const clearChat = () => {
@@ -198,7 +292,16 @@ export default function Chatbot() {
     >
       {message.isBot && !message.isSystem && (
         <View style={styles.botAvatar}>
-          <Ionicons name="chatbubble-ellipses" size={16} color="#4F46E5" />
+          <Ionicons 
+            name={isSpeaking ? "volume-high" : "chatbubble-ellipses"} 
+            size={16} 
+            color={isSpeaking ? "#10B981" : "#4F46E5"} 
+          />
+          {isSpeaking && (
+            <View style={styles.speakingIndicator}>
+              <Animated.View style={[styles.speakingDot, { opacity: recordingAnimation }]} />
+            </View>
+          )}
         </View>
       )}
       
@@ -247,6 +350,26 @@ export default function Chatbot() {
         </View>
         
         <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={[styles.headerButton, voiceEnabled && styles.voiceActiveButton]}
+            onPress={toggleVoice}
+          >
+            <Ionicons 
+              name={voiceEnabled ? "volume-high" : "volume-mute"} 
+              size={20} 
+              color={voiceEnabled ? "#10B981" : "#6B7280"} 
+            />
+          </TouchableOpacity>
+          
+          {isSpeaking && (
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={stopSpeaking}
+            >
+              <Ionicons name="stop-circle" size={20} color="#EF4444" />
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity 
             style={styles.headerButton}
             onPress={() => setShowLanguageModal(true)}
@@ -313,8 +436,21 @@ export default function Chatbot() {
       {/* Input */}
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         style={styles.inputContainer}
       >
+        {isRecording && (
+          <View style={styles.recordingStatus}>
+            <Animated.View style={{ opacity: recordingAnimation }}>
+              <Ionicons name="radio-button-on" size={12} color="#EF4444" />
+            </Animated.View>
+            <Text style={styles.recordingText}>Listening... Speak now</Text>
+            <TouchableOpacity onPress={() => setIsRecording(false)}>
+              <Text style={styles.cancelRecording}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        
         <View style={styles.inputRow}>
           <TextInput
             style={styles.textInput}
@@ -325,6 +461,21 @@ export default function Chatbot() {
             multiline
             maxLength={500}
           />
+          
+          <TouchableOpacity 
+            style={[styles.voiceButton, isRecording && styles.voiceButtonActive]}
+            onPress={startVoiceRecording}
+            disabled={isRecording}
+          >
+            <Animated.View style={{ opacity: isRecording ? recordingAnimation : 1 }}>
+              <Ionicons 
+                name={isRecording ? "mic" : "mic-outline"} 
+                size={20} 
+                color={isRecording ? "#EF4444" : "#4F46E5"} 
+              />
+            </Animated.View>
+          </TouchableOpacity>
+          
           <TouchableOpacity 
             style={[styles.sendButton, inputText.trim() === '' && styles.sendButtonDisabled]}
             onPress={sendMessage}
@@ -449,6 +600,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+    position: 'relative',
+  },
+  speakingIndicator: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10B981',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  speakingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
   messageBubble: {
     maxWidth: '80%',
@@ -554,6 +723,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
+    paddingBottom: 100, // Add padding for tab bar
+  },
+  recordingStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#FEF2F2',
+    borderBottomWidth: 1,
+    borderBottomColor: '#FECACA',
+  },
+  recordingText: {
+    fontSize: 14,
+    color: '#EF4444',
+    fontWeight: '500',
+    marginLeft: 8,
+    flex: 1,
+  },
+  cancelRecording: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
   inputRow: {
     flexDirection: 'row',
@@ -583,6 +775,26 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: '#D1D5DB',
+  },
+  // Voice-related styles
+  voiceButton: {
+    backgroundColor: '#F3F4F6',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  voiceButtonActive: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#EF4444',
+  },
+  voiceActiveButton: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#10B981',
   },
   modalOverlay: {
     flex: 1,
