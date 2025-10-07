@@ -9,17 +9,55 @@ import QRCode from 'react-native-qrcode-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 
+// Emergency services data for Northeast India
+const EMERGENCY_SERVICES = {
+  assam: {
+    hospitals: [
+      { name: 'GNRC Hospital Guwahati', address: 'Dispur, Guwahati, Assam', phone: '+91-361-2151632', distance: '2.3 km' },
+      { name: 'Down Town Hospital', address: 'Guwahati, Assam', phone: '+91-361-2332236', distance: '3.7 km' },
+      { name: 'Nemcare Hospital', address: 'Bhangagarh, Guwahati', phone: '+91-361-2738000', distance: '4.2 km' }
+    ],
+    police: [
+      { name: 'Dispur Police Station', address: 'Dispur, Guwahati, Assam', phone: '100', distance: '1.8 km' },
+      { name: 'Tourist Police Guwahati', address: 'Zoo Road, Guwahati, Assam', phone: '+91-361-2540779', distance: '2.5 km' },
+      { name: 'Panbazar Police Station', address: 'Panbazar, Guwahati', phone: '+91-361-2543214', distance: '3.1 km' }
+    ]
+  },
+  arunachal: {
+    hospitals: [
+      { name: 'Tomo Riba Institute of Health', address: 'Naharlagun, Arunachal Pradesh', phone: '+91-360-2244307', distance: '1.5 km' },
+      { name: 'District Hospital Itanagar', address: 'Itanagar, Arunachal Pradesh', phone: '+91-360-2212980', distance: '2.8 km' }
+    ],
+    police: [
+      { name: 'Capital Police Station', address: 'Itanagar, Arunachal Pradesh', phone: '100', distance: '1.2 km' },
+      { name: 'Tourist Police Itanagar', address: 'Naharlagun, Arunachal Pradesh', phone: '+91-360-2244221', distance: '2.0 km' }
+    ]
+  },
+  meghalaya: {
+    hospitals: [
+      { name: 'NEIGRIHMS', address: 'Mawdiangdiang, Shillong', phone: '+91-364-2538004', distance: '3.2 km' },
+      { name: 'Civil Hospital Shillong', address: 'Shillong, Meghalaya', phone: '+91-364-2224089', distance: '2.1 km' }
+    ],
+    police: [
+      { name: 'Sadar Police Station', address: 'Police Bazar, Shillong', phone: '100', distance: '1.7 km' },
+      { name: 'Tourist Police Shillong', address: 'Shillong, Meghalaya', phone: '+91-364-2226220', distance: '2.3 km' }
+    ]
+  }
+};
+
 export default function Dashboard() {
   const [location, setLocation] = useState(null);
   // For local location history
   const [locationHistory, setLocationHistory] = useState([]);
+  const [currentState, setCurrentState] = useState('assam'); // Default to Assam
   const [permissionStatus, setPermissionStatus] = useState("undetermined");
   const [refreshing, setRefreshing] = useState(false);
   const [safetyScore, setSafetyScore] = useState(85);
   const [alerts, setAlerts] = useState([
-    { id: 1, type: 'warning', title: 'Restricted Zone Entered', time: '10:15 AM', status: 'Active' },
-    { id: 2, type: 'sos', title: 'SOS Alert Triggered', time: 'Yesterday 6:40 PM', status: 'Resolved' },
-    { id: 3, type: 'info', title: 'Checkpoint Cleared', time: 'Yesterday 2:10 PM', status: 'Resolved' },
+    { id: 1, type: 'critical', title: 'ILP Verification Required - Tawang', time: '2 hours ago', status: 'Active', priority: 'high' },
+    { id: 2, type: 'weather', title: 'Heavy Rainfall Alert - Cherrapunji', time: '3 hours ago', status: 'Active', priority: 'medium' },
+    { id: 3, type: 'cultural', title: 'Hornbill Festival - Crowd Advisory', time: '5 hours ago', status: 'Active', priority: 'low' },
+    { id: 4, type: 'info', title: 'Majuli Ferry Service Restored', time: 'Yesterday 8:20 PM', status: 'Resolved', priority: 'low' },
   ]);
   const router = useRouter();
   const [dtid, setDtid] = useState(null);
@@ -211,23 +249,131 @@ export default function Dashboard() {
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Recent Alerts</Text>
-        {alerts.slice(0,2).map((alert) => (
-          <View key={alert.id} style={[styles.alertRow, { borderLeftColor: alert.type === 'sos' ? '#EF4444' : alert.type === 'warning' ? '#F59E0B' : '#10B981' } ]}>
-            <Text style={[styles.alertIcon, { color: alert.type === 'sos' ? '#EF4444' : alert.type === 'warning' ? '#F59E0B' : '#10B981' } ]}>
-              {alert.type === 'sos' ? '🚨' : alert.type === 'warning' ? '⚠️' : '✅'}
-            </Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.alertTitle}>{alert.title}</Text>
-              <Text style={styles.alertTime}>{alert.time}</Text>
+        {alerts.slice(0,2).map((alert) => {
+          const getAlertStyle = (type) => {
+            const styles = {
+              critical: { color: '#DC2626', icon: '🚨' },
+              weather: { color: '#2563EB', icon: '🌧️' },
+              cultural: { color: '#9333EA', icon: '🎭' },
+              info: { color: '#059669', icon: '✅' },
+              default: { color: '#6B7280', icon: 'ℹ️' }
+            };
+            return styles[type] || styles.default;
+          };
+          
+          const alertStyle = getAlertStyle(alert.type);
+          
+          return (
+            <View key={alert.id} style={[styles.alertRow, { borderLeftColor: alertStyle.color }]}>
+              <Text style={[styles.alertIcon, { color: alertStyle.color }]}>
+                {alertStyle.icon}
+              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.alertTitle}>{alert.title}</Text>
+                <Text style={styles.alertTime}>{alert.time}</Text>
+              </View>
+              <View style={[styles.statusChip, { 
+                backgroundColor: alert.status === 'Active' ? (alert.priority === 'high' ? '#DC2626' : '#F59E0B') : '#10B981' 
+              }]}>
+                <Text style={styles.statusChipText}>{alert.status}</Text>
+              </View>
             </View>
-            <View style={[styles.statusChip, { backgroundColor: alert.status === 'Active' ? '#F59E0B' : '#10B981' } ]}>
-              <Text style={styles.statusChipText}>{alert.status}</Text>
-            </View>
-          </View>
-        ))}
+          );
+        })}
         <TouchableOpacity style={styles.viewAllBtn} onPress={() => router.push('/(tabs)/alerts')}>
           <Text style={styles.viewAllBtnText}>View All Alerts</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Educational Section about Northeast India */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Northeast India Guide</Text>
+        <View style={styles.educationalContent}>
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>🏛️</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Cultural Heritage</Text>
+              <Text style={styles.educationalDescription}>
+                Home to 200+ tribes with unique traditions, languages, and festivals
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>🎭</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Major Festivals</Text>
+              <Text style={styles.educationalDescription}>
+                Hornbill (Dec), Bihu (Apr), Cheiraoba (Apr), Chapchar Kut (Mar)
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>📋</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Travel Documents</Text>
+              <Text style={styles.educationalDescription}>
+                ILP required for Arunachal, Nagaland, Mizoram. RAP for border areas
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.educationalItem}>
+            <View style={styles.educationalIcon}>
+              <Text style={styles.educationalEmoji}>🌿</Text>
+            </View>
+            <View style={styles.educationalText}>
+              <Text style={styles.educationalTitle}>Biodiversity</Text>
+              <Text style={styles.educationalDescription}>
+                Kaziranga rhinos, living root bridges, sacred groves, unique ecosystems
+              </Text>
+            </View>
+          </View>
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.viewAllBtn, { backgroundColor: '#059669', marginTop: 12 }]} 
+          onPress={() => router.push('/(tabs)/chatbot')}
+        >
+          <Text style={styles.viewAllBtnText}>Ask AI Assistant</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Quick Facts Section */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Did You Know?</Text>
+        <View style={styles.factsContainer}>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>8</Text>
+            <Text style={styles.factLabel}>States</Text>
+          </View>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>200+</Text>
+            <Text style={styles.factLabel}>Tribes</Text>
+          </View>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>220</Text>
+            <Text style={styles.factLabel}>Languages</Text>
+          </View>
+          <View style={styles.factItem}>
+            <Text style={styles.factNumber}>3</Text>
+            <Text style={styles.factLabel}>Seasons</Text>
+          </View>
+        </View>
+        
+        <View style={styles.tipContainer}>
+          <Text style={styles.tipIcon}>💡</Text>
+          <Text style={styles.tipText}>
+            <Text style={styles.tipBold}>Best Time to Visit:</Text> October to March for pleasant weather and clear mountain views
+          </Text>
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -275,6 +421,131 @@ export default function Dashboard() {
           </TouchableOpacity>
           <TouchableOpacity style={[styles.quickBtn, { backgroundColor: '#EF4444' }]} onPress={() => router.push('/emergency-details')}>
             <Text style={styles.quickBtnText}>Emergency Contacts</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Emergency Services Section */}
+      <View style={styles.card}>
+        <View style={styles.emergencyHeader}>
+          <Text style={styles.sectionTitle}>Nearby Emergency Services</Text>
+          <View style={styles.stateSelector}>
+            <TouchableOpacity
+              style={[styles.stateSelectorButton, currentState === 'assam' && styles.stateSelectorActive]}
+              onPress={() => setCurrentState('assam')}
+            >
+              <Text style={[styles.stateSelectorText, currentState === 'assam' && styles.stateSelectorTextActive]}>
+                Assam
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.stateSelectorButton, currentState === 'arunachal' && styles.stateSelectorActive]}
+              onPress={() => setCurrentState('arunachal')}
+            >
+              <Text style={[styles.stateSelectorText, currentState === 'arunachal' && styles.stateSelectorTextActive]}>
+                Arunachal
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.stateSelectorButton, currentState === 'meghalaya' && styles.stateSelectorActive]}
+              onPress={() => setCurrentState('meghalaya')}
+            >
+              <Text style={[styles.stateSelectorText, currentState === 'meghalaya' && styles.stateSelectorTextActive]}>
+                Meghalaya
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <View style={styles.emergencyServicesContainer}>
+          {/* Hospitals Section */}
+          <View style={styles.emergencyCategory}>
+            <View style={styles.emergencyCategoryHeader}>
+              <View style={styles.emergencyIconContainer}>
+                <Text style={styles.emergencyIcon}>🏥</Text>
+              </View>
+              <Text style={styles.emergencyCategoryTitle}>Nearby Hospitals</Text>
+            </View>
+            
+            <View style={styles.emergencyList}>
+              {EMERGENCY_SERVICES[currentState]?.hospitals.slice(0, 2).map((hospital, index) => (
+                <View key={index} style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>{hospital.name}</Text>
+                    <Text style={styles.emergencyAddress}>{hospital.address}</Text>
+                    <Text style={styles.emergencyDistance}>{hospital.distance} away</Text>
+                  </View>
+                  <View style={styles.emergencyActions}>
+                    <TouchableOpacity 
+                      style={styles.callButton}
+                      onPress={() => Linking.openURL(`tel:${hospital.phone}`)}
+                    >
+                      <Text style={styles.callButtonText}>📞 Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )) || (
+                <View style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>Loading hospitals...</Text>
+                    <Text style={styles.emergencyAddress}>Fetching nearby medical facilities</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Police Section */}
+          <View style={styles.emergencyCategory}>
+            <View style={styles.emergencyCategoryHeader}>
+              <View style={styles.emergencyIconContainer}>
+                <Text style={styles.emergencyIcon}>👮</Text>
+              </View>
+              <Text style={styles.emergencyCategoryTitle}>Nearby Police</Text>
+            </View>
+            
+            <View style={styles.emergencyList}>
+              {EMERGENCY_SERVICES[currentState]?.police.slice(0, 2).map((police, index) => (
+                <View key={index} style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>{police.name}</Text>
+                    <Text style={styles.emergencyAddress}>{police.address}</Text>
+                    <Text style={styles.emergencyDistance}>{police.distance} away</Text>
+                  </View>
+                  <View style={styles.emergencyActions}>
+                    <TouchableOpacity 
+                      style={styles.callButton}
+                      onPress={() => Linking.openURL(`tel:${police.phone}`)}
+                    >
+                      <Text style={styles.callButtonText}>📞 Call</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )) || (
+                <View style={styles.emergencyItem}>
+                  <View style={styles.emergencyInfo}>
+                    <Text style={styles.emergencyName}>Loading police stations...</Text>
+                    <Text style={styles.emergencyAddress}>Fetching nearby law enforcement</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.emergencyFooter}>
+          <TouchableOpacity 
+            style={styles.emergencyButton}
+            onPress={() => {
+              // In real app, this would show more emergency services
+              Alert.alert(
+                'Emergency Services',
+                'For immediate help:\n• Dial 100 for Police\n• Dial 108 for Medical Emergency\n• Dial 101 for Fire Brigade',
+                [{ text: 'OK' }]
+              );
+            }}
+          >
+            <Text style={styles.emergencyButtonText}>View All Emergency Services</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -339,6 +610,223 @@ const styles = StyleSheet.create({
     color: '#fff', 
     fontWeight: 'bold',
     fontSize: 14
+  },
+  // Educational Content Styles
+  educationalContent: {
+    marginTop: 12,
+  },
+  educationalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  educationalIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  educationalEmoji: {
+    fontSize: 18,
+  },
+  educationalText: {
+    flex: 1,
+  },
+  educationalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  educationalDescription: {
+    fontSize: 13,
+    color: '#6B7280',
+    lineHeight: 18,
+  },
+  // Quick Facts Styles
+  factsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  factItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  factNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#059669',
+    marginBottom: 4,
+  },
+  factLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  tipContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0FDF4',
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+    alignItems: 'flex-start',
+  },
+  tipIcon: {
+    fontSize: 16,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#065F46',
+    lineHeight: 18,
+  },
+  tipBold: {
+    fontWeight: '600',
+  },
+  // Emergency Services Styles
+  emergencyHeader: {
+    marginBottom: 16,
+  },
+  stateSelector: {
+    flexDirection: 'row',
+    marginTop: 12,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    padding: 4,
+  },
+  stateSelectorButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  stateSelectorActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  stateSelectorText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  stateSelectorTextActive: {
+    color: '#059669',
+    fontWeight: '600',
+  },
+  emergencyServicesContainer: {
+    marginTop: 12,
+  },
+  emergencyCategory: {
+    marginBottom: 20,
+  },
+  emergencyCategoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emergencyIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  emergencyIcon: {
+    fontSize: 16,
+  },
+  emergencyCategoryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  emergencyList: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 8,
+  },
+  emergencyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  emergencyInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  emergencyName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  emergencyAddress: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  emergencyDistance: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '500',
+  },
+  emergencyActions: {
+    alignItems: 'flex-end',
+  },
+  callButton: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  callButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  emergencyFooter: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  emergencyButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  emergencyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
